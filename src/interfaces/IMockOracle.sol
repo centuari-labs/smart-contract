@@ -8,7 +8,7 @@ interface IMockOracle {
     /// @notice Error thrown when an invalid price is provided
     /// @dev Thrown when attempting to set a price that doesn't meet requirements
     error InvalidPrice();
-    
+
     /// @notice Get the current price from the oracle
     /// @dev Returns the most recently set price
     /// @return The current price value

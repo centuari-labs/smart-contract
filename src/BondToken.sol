@@ -23,49 +23,50 @@ contract BondToken is Ownable, ERC20 {
 
     BondTokenInfo public info;
 
-    constructor(
-        address lendingPool_,
-        BondTokenInfo memory info_
-    ) 
+    constructor(address lendingPool_, BondTokenInfo memory info_)
         Ownable(lendingPool_)
         ERC20(
             string(
                 abi.encodePacked(
                     "POC ",
-                    IERC20Metadata(info_.debtToken).symbol(), "/", IERC20Metadata(info_.collateralToken).symbol(),
+                    IERC20Metadata(info_.debtToken).symbol(),
+                    "/",
+                    IERC20Metadata(info_.collateralToken).symbol(),
                     " ",
-                    (info_.rate / 1e14).toString(), "RATE",
+                    (info_.rate / 1e14).toString(),
+                    "RATE",
                     " ",
-                    info_.maturityMonth, "-", info_.maturityYear.toString()
+                    info_.maturityMonth,
+                    "-",
+                    info_.maturityYear.toString()
                 )
             ),
             string(
                 abi.encodePacked(
                     "poc",
-                    IERC20Metadata(info_.debtToken).symbol(), IERC20Metadata(info_.collateralToken).symbol(),
-                    (info_.rate / 1e14).toString(), "R",
-                    info_.maturityMonth, info_.maturityYear.toString()
+                    IERC20Metadata(info_.debtToken).symbol(),
+                    IERC20Metadata(info_.collateralToken).symbol(),
+                    (info_.rate / 1e14).toString(),
+                    "R",
+                    info_.maturityMonth,
+                    info_.maturityYear.toString()
                 )
             )
-        ) 
+        )
     {
         if (
-            info_.debtToken == address(0) || 
-            info_.collateralToken == address(0) ||
-            info_.rate == 0 ||
-            info_.maturity <= block.timestamp ||
-            bytes(info_.maturityMonth).length == 0 ||
-            info_.maturityYear == 0
+            info_.debtToken == address(0) || info_.collateralToken == address(0) || info_.rate == 0
+                || info_.maturity <= block.timestamp || bytes(info_.maturityMonth).length == 0 || info_.maturityYear == 0
         ) {
             revert InvalidBondTokenInfo();
         }
         info = info_;
     }
-    
+
     function decimals() public view override returns (uint8) {
         return uint8(info.decimals);
     }
-    
+
     function mint(address to_, uint256 amount_) external onlyOwner {
         _mint(to_, amount_);
     }

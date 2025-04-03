@@ -34,9 +34,7 @@ contract MockTokenTest_Mint is MockTokenTest_Base {
     /// @notice Test minting restriction to owner
     /// @dev Verifies that non-owners cannot mint tokens
     function test_Mint_RevertIf_NotOwner() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address1)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address1));
         vm.prank(address1);
         mockToken.mint(address(this), 1000);
     }
@@ -57,9 +55,7 @@ contract MockTokenTest_Burn is MockTokenTest_Base {
     /// @notice Test burning restriction to owner
     /// @dev Verifies that non-owners cannot burn tokens
     function test_Burn_RevertIf_NotOwner() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address1)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address1));
         vm.prank(address1);
         mockToken.burn(1000);
     }

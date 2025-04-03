@@ -39,11 +39,8 @@ contract MockOracleTest_SetPrice is MockOracleTest_Base {
     /// @notice Test price setting restriction to owner
     /// @dev Verifies that non-owners cannot set the price
     function test_setPrice_RevertIf_NotOwner() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address1)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address1));
         vm.prank(address1);
         mockOracle.setPrice(1000);
     }
 }
-

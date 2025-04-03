@@ -39,7 +39,7 @@ contract BondTokenTest_Constructor is BondTokenTest_Base {
     function test_BondToken_Constructor() public view {
         console.log("Token Symbol:", IERC20Metadata(bondToken).symbol());
         console.log("Token Name:", IERC20Metadata(bondToken).name());
-        
+
         (
             address debtToken_,
             address collateralToken_,
@@ -67,11 +67,8 @@ contract BondTokenTest_Mint is BondTokenTest_Base {
     }
 
     function test_Mint_RevertIf_NotOwner() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address1)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address1));
         vm.prank(address1);
         bondToken.mint(address(this), 1000);
     }
 }
-
