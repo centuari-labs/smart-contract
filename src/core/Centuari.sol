@@ -24,10 +24,6 @@ contract Centuari is ICentuari, Ownable {
         router = router_;
     }
 
-    function deposit(address token, uint256 amount) external onlyRouter {
-        //TODO: Add Logic
-    }
-
     function withdraw(address token, uint256 amount) external onlyRouter {
         //TODO: Add Logic
     }

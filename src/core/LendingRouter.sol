@@ -18,7 +18,7 @@ contract LendingRouter is ILendingRouter, Ownable {
     using LendingCLOBConfigLib for LendingCLOBConfig;
 
     mapping(Id => address) public lendingPools;
-    mapping(Id => address) public lendingClobs;
+    mapping(Id => address) public lendingCLOBs;
 
     constructor(address centuari_, address owner_) Ownable(owner_) {
         require(centuari_ != address(0), "Invalid Centuari address");

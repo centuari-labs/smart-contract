@@ -21,7 +21,7 @@ contract LendingCLOB is ILendingCLOB, Ownable {
     /// @notice Tracks collateral balances for borrowers
     mapping(address => uint256) public collateralBalances;
 
-    /// @notice Tracks debt token balances for lenders
+    /// @notice Tracks loan token balances for lenders
     mapping(address => uint256) public loanBalances;
 
     /// @notice Maps traders to their orders
