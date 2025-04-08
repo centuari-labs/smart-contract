@@ -1,12 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import { LendingPoolConfig,ILendingPool } from "../interfaces/ILendingPool.sol";
+import { LendingPoolConfig, ILendingPool } from "../interfaces/ILendingPool.sol";
 import { Ownable } from "openzeppelin-contracts/contracts/access/Ownable.sol";
 contract LendingPool is ILendingPool, Ownable {
+    error NotRouter();
+
     address public router;
     /// @notice The lending pool's configuration information
     LendingPoolConfig public config;
+
+    /// @notice The lending pool's state
+    LendingPoolState public state;
+    event RouterSet(address indexed oldRouter, address indexed router);
+
+    modifier onlyRouter() {
+        if (msg.sender != router) revert NotRouter();
+        _;
+    }
 
     constructor(
         address owner_,
@@ -27,8 +38,17 @@ contract LendingPool is ILendingPool, Ownable {
         config = config_;
     }
 
-    function setRouter(address router_) external override {
-        //TODO: Add Logic
+    /// @notice Sets a new router address for the protocol
+    /// @dev Only the current router can set a new router address
+    /// @param router_ The new router address to be set
+    function setRouter(address router_) external override onlyRouter {
+        if (router_ == address(0)) revert InvalidRouter();
+        if (router_ == router) revert InvalidRouter();
+
+        address oldRouter = router;
+        router = router_;
+
+        emit RouterSet(oldRouter, router_);
     }
 
     function setLltv(uint256 lltv_) external override {

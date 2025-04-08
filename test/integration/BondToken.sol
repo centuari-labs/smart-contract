@@ -2,10 +2,10 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { BondToken } from "../src/core/BondToken.sol";
-import {MockToken} from "../src/mocks/MockToken.sol";
+import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
+import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { BondToken } from "../../src/core/BondToken.sol";
+import {MockToken} from "../../src/mocks/MockToken.sol";
 
 /// @title Base test contract for BondToken
 /// @notice Provides the common setup and utilities for all BondToken tests
