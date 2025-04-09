@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {Ownable} from "@openzeppelin-contracts/access/Ownable.sol";
+import {ERC20} from "@openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {IERC20Metadata} from "@openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
 
 /// @title BondToken
 /// @notice A specialized ERC20 token representing lending positions in the Centuari protocol

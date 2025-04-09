@@ -1,18 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @notice Structure holding the lending Clob's configuration
-/// @param loanToken Address of the token that can be borrowed
-/// @param collateralToken Address of the token that can be used as collateral
-/// @param maturityMonth String representation of the maturity month (e.g., "MAY")
-/// @param maturityYear Year when the lending pool matures
-struct LendingCLOBConfig {
-    address loanToken;
-    address collateralToken;
-    string maturityMonth;
-    uint256 maturityYear;
-}
-
 /// @title ILendingCLOB - Interface for the LendingCLOB contract
 /// @notice Manages lending and borrowing orders with rate-time priority matching
 /// @dev Implements a two-sided order book where LEND and BORROW
@@ -58,12 +46,7 @@ interface ILendingCLOB {
     }
 
     /// @notice Thrown when a trader has insufficient balance
-    error InsufficientBalance(
-        address trader,
-        address token,
-        uint256 balance,
-        uint256 amount
-    );
+    error InsufficientBalance(address trader, address token, uint256 balance, uint256 amount);
     /// @notice Thrown when an order is not found
     error OrderNotFound();
 
@@ -82,23 +65,13 @@ interface ILendingCLOB {
     event Deposit(address indexed trader, uint256 amount, Side side);
 
     /// @notice Emitted when orders are matched
-    event OrderMatched(
-        uint256 newOrderId,
-        uint256 matchedOrderId,
-        Status newOrderStatus,
-        Status matchedOrderStatus
-    );
+    event OrderMatched(uint256 newOrderId, uint256 matchedOrderId, Status newOrderStatus, Status matchedOrderStatus);
 
     /// @notice Emitted when an order is removed from the queue
     event OrderRemovedFromQueue(uint256 orderId, uint256 rate, Side side);
 
     /// @notice Emitted when tokens are transferred between parties
-    event Transfer(
-        address indexed from,
-        address indexed to,
-        uint256 amount,
-        Side side
-    );
+    event Transfer(address indexed from, address indexed to, uint256 amount, Side side);
 
     /// @notice Emitted when a limit order is cancelled
     event LimitOrderCancelled(uint256 orderId, Status status);
@@ -112,18 +85,9 @@ interface ILendingCLOB {
     /// @param side LEND or BORROW
     /// @return matchedLendOrders Array of matched lending orders
     /// @return matchedBorrowOrders Array of matched borrowing orders
-    function placeOrder(
-        address trader,
-        uint256 amount,
-        uint256 collateralAmount,
-        uint256 rate,
-        Side side
-    )
+    function placeOrder(address trader, uint256 amount, uint256 collateralAmount, uint256 rate, Side side)
         external
-        returns (
-            MatchedInfo[] memory matchedLendOrders,
-            MatchedInfo[] memory matchedBorrowOrders
-        );
+        returns (MatchedInfo[] memory matchedLendOrders, MatchedInfo[] memory matchedBorrowOrders);
 
     /// @notice Cancels an open order
     /// @dev Refunds escrowed tokens and updates order status
@@ -131,23 +95,8 @@ interface ILendingCLOB {
     /// @param orderId ID of the order to cancel
     function cancelOrder(address trader, uint256 orderId) external;
 
-    /// @notice Transfers tokens between parties
-    /// @dev Only callable by owner (e.g., router contract)
-    /// @param from Address to transfer from
-    /// @param to Address to transfer to
-    /// @param amount Amount of tokens to transfer
-    /// @param side Determines which token to transfer (LEND=debt, BORROW=collateral)
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount,
-        Side side
-    ) external;
-
     /// @notice Gets all orders placed by a trader
     /// @param trader Address of the trader
     /// @return Array of orders placed by the trader
-    function getUserOrders(
-        address trader
-    ) external view returns (Order[] memory);
+    function getUserOrders(address trader) external view returns (Order[] memory);
 }
