@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable} from "@openzeppelin/access/Ownable.sol";
+import {Id, MarketConfig} from "../types/CommonTypes.sol";
+import {MarketConfigLib} from "../libraries/MarketConfigLib.sol";
 
 contract LendingCLOB is Ownable {
-    mapping(MarketConfig => address) public dataStore;
+    using MarketConfigLib for MarketConfig;
+
+    mapping(Id => address) public dataStores;
     address public centuari;
 
     constructor(address owner_, address centuari_) Ownable(owner_) {
@@ -17,7 +21,7 @@ contract LendingCLOB is Ownable {
         //Call Centuari.createDataStore
     }
 
-    function setDataStore(DataStoreConfig config, address dataStore) external onlyOwner {
+    function setDataStore(MarketConfig config, address dataStore) external onlyOwner {
         //TODO: Add logic
     }
 
