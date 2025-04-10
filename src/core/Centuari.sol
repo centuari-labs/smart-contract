@@ -9,11 +9,9 @@ import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
 import {ICentuari} from "../interfaces/ICentuari.sol";
 
 // Internal imports - libraries
-import {ErrorsLib} from "../libraries/ErrorsLib.sol";
-import {EventsLib} from "../libraries/EventsLib.sol";
 import {MarketConfigLib} from "../libraries/MarketConfigLib.sol";
 import {DateLib} from "../libraries/DateLib.sol";
-import {CentuariDSLib} from "../libraries/CentuariDSLib.sol";
+import {CentuariDSLib} from "../libraries/Centuari/CentuariDSLib.sol";
 import {CentuariErrorsLib} from "../libraries/Centuari/CentuariErrorsLib.sol";
 import {CentuariEventsLib} from "../libraries/Centuari/CentuariEventsLib.sol";
 
@@ -36,7 +34,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
             revert MarketNotActive();
         }
 
-        if (block.timestamp >= dataStore.getUint(CentuariDSLib.MATURITY_UINT256);) {
+        if (block.timestamp >= dataStore.getUint(CentuariDSLib.MATURITY_UINT256)) {
             dataStore.setBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL, false);
             revert MarketExpired();
         }
