@@ -4,9 +4,13 @@ pragma solidity ^0.8.24;
 // External imports
 import {Ownable} from "@openzeppelin/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
+import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/token/ERC20/extensions/IERC20Metadata.sol";
 
 // Internal imports - interfaces
 import {ICentuari} from "../interfaces/ICentuari.sol";
+import {IMockOracle} from "../interfaces/IMockOracle.sol";
 
 // Internal imports - libraries
 import {MarketConfigLib} from "../libraries/MarketConfigLib.sol";
@@ -24,37 +28,54 @@ import {DataStore} from "./DataStore.sol";
 
 contract Centuari is ICentuari, Ownable, ReentrancyGuard {
     using MarketConfigLib for MarketConfig;
+    using SafeERC20 for IERC20;
 
     mapping(Id => address) public dataStores;
+    address public immutable lendingCLOB;
 
-    modifier onlyBeforeMaturity(Id id) {
+    modifier onlyActiveMarket(Id id) {
         DataStore dataStore = dataStores[id];
         
         if (!dataStore.getBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL)) {
-            revert MarketNotActive();
+            revert CentuariErrorsLib.MarketNotActive();
         }
 
         if (block.timestamp >= dataStore.getUint(CentuariDSLib.MATURITY_UINT256)) {
             dataStore.setBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL, false);
-            revert MarketExpired();
+            revert CentuariErrorsLib.MarketExpired();
         }
         _;
     }
 
-    constructor(address owner_) Ownable(owner_) {}
+    modifier onlyActiveRate(Id id, uint256 rate) {
+        if(dataStores[id].getAddress(CentuariDSLib.getBondTokenAddressKey(rate)) == address(0)) revert CentuariErrorsLib.RateNotActive();
+        _;
+    }
 
-    function createDataStore(MarketConfig memory config) external {
+    modifier onlyLendingCLOB() {
+        if(msg.sender != lendingCLOB) revert CentuariErrorsLib.OnlyLendingCLOB();
+        _;
+    }
+
+    constructor(address owner_, address lendingCLOB_) Ownable(owner_) {
+        lendingCLOB = lendingCLOB_;
+    }
+
+    function createDataStore(MarketConfig memory config) external onlyLendingCLOB {
         // Validate market config
         require(config.loanToken != address(0), CentuariErrorsLib.INVALID_MARKET_CONFIG);
         require(config.collateralToken != address(0), CentuariErrorsLib.INVALID_MARKET_CONFIG);
         require(config.maturity > block.timestamp, CentuariErrorsLib.INVALID_MARKET_CONFIG);
 
         Id marketConfigId = config.id();
-        DataStore storage dataStore = dataStores[marketConfigId];
-        dataStore.setAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS, config.loanToken);
-        dataStore.setAddress(CentuariDSLib.COLLATERAL_TOKEN_ADDRESS, config.collateralToken);
-        dataStore.setUint(CentuariDSLib.MATURITY_UINT256, config.maturity);
-        dataStore.setBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL, true);
+        DataStore dataStore = new DataStore(owner(), address(this));
+        dataStores[marketConfigId] = dataStore;
+
+        // Set data store data
+        dataStores[marketConfigId].setAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS, config.loanToken);
+        dataStores[marketConfigId].setAddress(CentuariDSLib.COLLATERAL_TOKEN_ADDRESS, config.collateralToken);
+        dataStores[marketConfigId].setUint(CentuariDSLib.MATURITY_UINT256, config.maturity);
+        dataStores[marketConfigId].setBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL, true);
     }
 
     function setDataStore(MarketConfig memory config, address dataStore) external onlyOwner {
@@ -63,32 +84,87 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         require(config.collateralToken != address(0), CentuariErrorsLib.INVALID_MARKET_CONFIG);
         require(config.maturity > block.timestamp, CentuariErrorsLib.INVALID_MARKET_CONFIG);
 
-        Id marketConfigId = config.id();
-        dataStores[marketConfigId] = dataStore;
+        dataStores[config.id()] = dataStore;
     }
 
-    function setLltv(MarketConfig memory config, uint256 lltv_) external onlyOwner {
-        //TODO: Check if market is available
-        if(lltv_ == 0 || lltv_ > 100e16) revert InvalidLltv();
+    function setLltv(MarketConfig memory config, uint256 lltv_) 
+        external 
+        override 
+        onlyOwner 
+        onlyActiveMarket(config.id()) 
+    {
+        if(lltv_ == 0 || lltv_ > 100e16) revert CentuariErrorsLib.InvalidLltv();
         dataStores[config.id()].setUint(CentuariDSLib.LLTV_UINT256, lltv_);
+        emit CentuariEventsLib.LltvUpdated(config.id(), lltv_);
     }
 
-    function setOracle(MarketConfig memory config, address oracle_) external onlyOwner {
-        //TODO: Check if market is available
-        if(oracle_ == address(0)) revert InvalidOracle();
+    function setOracle(MarketConfig memory config, address oracle_) 
+        external 
+        override 
+        onlyOwner 
+        onlyActiveMarket(config.id()) 
+    {
+        if(oracle_ == address(0)) revert CentuariErrorsLib.InvalidOracle();
         dataStores[config.id()].setAddress(CentuariDSLib.ORACLE_ADDRESS, oracle_);
+        emit CentuariEventsLib.OracleUpdated(config.id(), oracle_);
     }
 
-    function isHealthy(address user) external view returns (bool) {
-        //TODO: Add Logic
-        return true;
+    function _isHealthy(MarketConfig memory config, uint256 rate, address user) internal view returns (bool) {
+        DataStore dataStore = dataStores[config.id()];
+
+        uint256 collateralPrice = IMockOracle(dataStore.getAddress(CentuariDSLib.ORACLE_ADDRESS)).price();
+        uint256 collateralDecimals = 10 ** IERC20Metadata(config.collateralToken).decimals();
+
+        uint256 borrowedValue = (dataStore.getUint(CentuariDSLib.getUserBorrowSharesKey(rate, user)) *
+            dataStore.getUint(CentuariDSLib.getTotalBorrowAssetsKey(rate))) / dataStore.getUint(CentuariDSLib.getTotalBorrowSharesKey(rate));
+        uint256 collateralValue = (dataStore.getUint(CentuariDSLib.getUserCollateralKey(rate, user)) *
+            collateralPrice) / collateralDecimals;
+        uint256 maxBorrowedValue = (collateralValue * dataStore.getUint(CentuariDSLib.LLTV_UINT256)) / 1e18;
+
+        return borrowedValue <= maxBorrowedValue;
     }
 
-    function addBorrowRate(MarketConfig memory config, uint256 borrowRate_) external override onlyBeforeMaturity(config.id()) {
-        if (dataStores[config.id()].getBool(CentuariDSLib.getIsPoolActiveKey(borrowRate_))) revert BorrowRateAlreadyExists();
-        if (borrowRate_ == 0 || borrowRate_ == 100e16) revert InvalidBorrowRate();
+    function accrueInterest(MarketConfig memory config, uint256 rate) 
+        external 
+        override 
+        onlyActiveRate(config.id(), rate) 
+        onlyActiveMarket(config.id()) 
+    {
+        _accrueInterest(config.id(),rate);
+    }
 
-        dataStores[config.id()].setUint(CentuariDSLib.getLastAccrueKey(borrowRate_), block.timestamp);
+    function _accrueInterest(Id id, uint256 rate) internal {
+        DataStore dataStore = dataStores[id];
+        uint256 totalBorrowAssets = dataStore.getUint(CentuariDSLib.TOTAL_BORROW_ASSETS_UINT256);
+        uint256 interestPerYear = (totalBorrowAssets * rate) / 1e18;
+
+        // Cap time passed at maturity
+        uint256 timePassed;
+        uint256 maxLastTimestamp;
+        if (block.timestamp > dataStore.getUint(CentuariDSLib.MATURITY_UINT256)) {
+            timePassed = dataStore.getUint(CentuariDSLib.MATURITY_UINT256) - dataStore.getUint(CentuariDSLib.LAST_ACCRUE_UINT256);
+            maxLastTimestamp = dataStore.getUint(CentuariDSLib.MATURITY_UINT256);
+        } else {
+            timePassed = block.timestamp - dataStore.getUint(CentuariDSLib.LAST_ACCRUE_UINT256);
+            maxLastTimestamp = block.timestamp;
+        }
+
+        uint256 interest = (interestPerYear * timePassed) / 365 days;
+
+        dataStore.setUint(CentuariDSLib.TOTAL_SUPPLY_ASSETS_UINT256, dataStore.getUint(CentuariDSLib.TOTAL_SUPPLY_ASSETS_UINT256) + interest);
+        dataStore.setUint(CentuariDSLib.TOTAL_BORROW_ASSETS_UINT256, dataStore.getUint(CentuariDSLib.TOTAL_BORROW_ASSETS_UINT256) + interest);
+        dataStore.setUint(CentuariDSLib.LAST_ACCRUE_UINT256, maxLastTimestamp);
+    }
+
+    function addRate(MarketConfig memory config, uint256 rate_) 
+        external 
+        override 
+        onlyActiveMarket(config.id()) 
+    {
+        if (dataStores[config.id()].getAddress(CentuariDSLib.getBondTokenAddressKey(rate_)) != address(0)) revert CentuariErrorsLib.RateAlreadyExists();
+        if (rate_ == 0 || rate_ == 100e16) revert CentuariErrorsLib.InvalidRate();
+
+        dataStores[config.id()].setUint(CentuariDSLib.getLastAccrueKey(rate_), block.timestamp);
 
         //Create new Bond Token
         BondToken.BondTokenConfig memory bondTokenConfig = BondToken.BondTokenConfig({
@@ -99,98 +175,213 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
             maturityYear: DateLib.getYear(config.maturity)
         });
         BondToken bondToken = new BondToken(address(this), bondTokenConfig);
-        dataStores[config.id()].setAddress(CentuariDSLib.getBondTokenAddressKey(borrowRate_), address(bondToken));
+        dataStores[config.id()].setAddress(CentuariDSLib.getBondTokenAddressKey(rate_), address(bondToken));
 
-        emit CentuariEventsLib.BorrowRateAdded(borrowRate_);
-        emit CentuariEventsLib.BondTokenCreated(address(bondToken), borrowRate_);
+        emit CentuariEventsLib.RateAdded(rate_);
+        emit CentuariEventsLib.BondTokenCreated(address(bondToken), rate_);
     }
 
-    function supply(MarketConfig memory config, int256 borrowRate, address user, uint256 amount) external override nonReentrant onlyBeforeMaturity(config.id()){
-        if (user == address(0)) revert InvalidUser();
-        if (amount == 0) revert InvalidAmount();
-        _accrueInterest(config.id(),borrowRate);
+    function supply(MarketConfig memory config, uint256 rate, address user, uint256 amount) 
+        external override 
+        nonReentrant
+        onlyLendingCLOB
+        onlyActiveMarket(config.id())
+        onlyActiveRate(config.id(), rate) 
+    {
+        if (user == address(0)) revert CentuariErrorsLib.InvalidUser();
+        if (amount == 0) revert CentuariErrorsLib.InvalidAmount();
+        _accrueInterest(config.id(),rate);
 
-        DataStore dataStore = dataStores[config.id()];
-        uint256 totalSupplyShares = dataStore.getUint(CentuariDSLib.getTotalSuppySharesKey(borrowRate));
-        uint256 totalSupplyAssets = dataStore.getUint(CentuariDSLib.getTotalSuppyAssetsKey(borrowRate));
+        DataStore storage dataStore = dataStores[config.id()];
+        uint256 totalSupplyShares = dataStore.getUint(CentuariDSLib.getTotalSuppySharesKey(rate));
+        uint256 totalSupplyAssets = dataStore.getUint(CentuariDSLib.getTotalSuppyAssetsKey(rate));
 
         uint256 shares = 0;
         if (totalSupplyShares == 0) {
             shares = amount;
         } else {
-            shares =
-                (amount * totalSupplyShares) /
-                totalSupplyAssets;
+            shares = (amount * totalSupplyShares) / totalSupplyAssets;
         }
 
-        dataStore.setUint(CentuariDSLib.getTotalSuppySharesKey(borrowRate), totalSupplyShares + shares);
-        dataStore.setUint(CentuariDSLib.getTotalSuppyAssetsKey(borrowRate), totalSupplyAssets + amount);
+        dataStore.setUint(CentuariDSLib.getTotalSuppySharesKey(rate), totalSupplyShares + shares);
+        dataStore.setUint(CentuariDSLib.getTotalSuppyAssetsKey(rate), totalSupplyAssets + amount);
 
         // mint tokenized bond to the lender
-        BondToken(dataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(borrowRate))).mint(user, shares);
+        BondToken(dataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(rate))).mint(user, shares);
 
-        emit CentuariEventsLib.Supply(borrowRate, user, shares, amount);
+        emit CentuariEventsLib.Supply(user, rate, shares, amount);
     }
 
-    function borrow(uint256 borrowRate, address user, uint256 amount) external override {
-        //TODO: Add Logic
-    }
+    function borrow(MarketConfig memory config, uint256 rate, address user, uint256 amount) 
+        external override 
+        nonReentrant 
+        onlyLendingCLOB
+        onlyActiveMarket(config.id())
+        onlyActiveRate(config.id(), rate) 
+    {
+        if (user == address(0)) revert CentuariErrorsLib.InvalidUser();
+        if (amount == 0) revert CentuariErrorsLib.InvalidAmount();
+        _accrueInterest(config.id(),rate);
 
-    function withdraw(uint256 borrowRate, uint256 shares) external override {
-        //TODO: Add Logic
-    }
+        DataStore storage dataStore = dataStores[config.id()];
+        uint256 totalBorrowShares = dataStore.getUint(CentuariDSLib.getTotalBorrowSharesKey(rate));
+        uint256 totalBorrowAssets = dataStore.getUint(CentuariDSLib.getTotalBorrowAssetsKey(rate));
 
-    function supplyCollateral(uint256 borrowRate, address user, uint256 amount) external override {
-        //TODO: Add Logic
-    }
-
-    function withdrawCollateral(uint256 borrowRate, uint256 amount) external override {
-        //TODO: Add Logic
-    }
-
-    function repay(uint256 borrowRate, uint256 amount) external override {
-        //TODO: Add Logic
-    }
-
-    function accrueInterest(MarketConfig memory config, uint256 borrowRate) external override onlyBeforeMaturity(config.id()) {
-        _accrueInterest(config.id(),borrowRate);
-    }
-
-    function _accrueInterest(Id id, uint256 borrowRate) internal {
-        DataStore dataStore = dataStores[id];
-        uint256 totalBorrowAssets = dataStore.getUint(TOTAL_BORROW_ASSETS_UINT256);
-        uint256 interestPerYear = (totalBorrowAssets * borrowRate) / 1e18;
-
-        // Cap time passed at maturity
-        uint256 timePassed;
-        uint256 maxLastTimestamp;
-        if (block.timestamp > dataStore.getUint(MATURITY_UINT256)) {
-            timePassed = dataStore.getUint(MATURITY_UINT256) - dataStore.getUint(LAST_ACCRUE_UINT256);
-            maxLastTimestamp = dataStore.getUint(MATURITY_UINT256);
+        uint256 shares = 0;
+        if (totalBorrowShares == 0) {
+            shares = amount;
         } else {
-            timePassed = block.timestamp - dataStore.getUint(LAST_ACCRUE_UINT256);
-            maxLastTimestamp = block.timestamp;
+            shares = (amount * totalBorrowShares) / totalBorrowAssets;
         }
 
-        uint256 interest = (interestPerYear * timePassed) / 365 days;
+        dataStore.setUint(CentuariDSLib.getUserBorrowSharesKey(rate, user), dataStore.getUint(CentuariDSLib.getUserBorrowSharesKey(rate, user)) + shares);
+        dataStore.setUint(CentuariDSLib.getTotalBorrowSharesKey(rate), totalBorrowShares + shares);
+        dataStore.setUint(CentuariDSLib.getTotalBorrowAssetsKey(rate), totalBorrowAssets + amount);
 
-        dataStore.setUint(TOTAL_SUPPLY_ASSETS_UINT256, dataStore.getUint(TOTAL_SUPPLY_ASSETS_UINT256) + interest);
-        dataStore.setUint(TOTAL_BORROW_ASSETS_UINT256, dataStore.getUint(TOTAL_BORROW_ASSETS_UINT256) + interest);
-        dataStore.setUint(LAST_ACCRUE_UINT256, maxLastTimestamp);
+        if (!_isHealthy(config.id(), rate, user)) revert CentuariErrorsLib.InsufficientCollateral();
+
+        emit CentuariEventsLib.Borrow(user, rate, shares, amount);
     }
 
-    function getUserCollateral(uint256 borrowRate, address user) external view override returns (uint256) {
-        //TODO: Add Logic
-        return 0;
+    function withdraw(MarketConfig memory config, uint256 rate, uint256 shares) 
+        external 
+        override
+        nonReentrant
+        onlyActiveRate(config.id(), rate)
+    {
+        if (shares == 0) revert CentuariErrorsLib.InvalidAmount();
+        if (block.timestamp < config.maturity) revert CentuariErrorsLib.MaturityNotReached();
+
+        DataStore storage dataStore = dataStores[config.id()];
+        uint256 totalSupplyShares = dataStore.getUint(CentuariDSLib.getTotalSuppySharesKey(rate));
+        uint256 totalSupplyAssets = dataStore.getUint(CentuariDSLib.getTotalSuppyAssetsKey(rate));
+        address loanTokenAddress = dataStore.getAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS);
+        address bondTokenAddress = dataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(rate));
+
+        if (IERC20(bondTokenAddress).balanceOf(msg.sender) < shares) revert CentuariErrorsLib.InsufficientShares();
+        _accrueInterest(config.id(), rate);
+
+        // Calculate amount to withdraw including interest
+        uint256 amount = (shares * totalSupplyAssets) / totalSupplyShares;
+
+        if (IERC20(loanTokenAddress).balanceOf(address(this)) < amount) revert CentuariErrorsLib.InsufficientLiquidity();
+
+        dataStore.setUint(CentuariDSLib.getTotalSuppySharesKey(rate), totalSupplyShares - shares);
+        dataStore.setUint(CentuariDSLib.getTotalSuppyAssetsKey(rate), totalSupplyAssets - amount);
+
+        BondToken(bondTokenAddress).burn(msg.sender, shares);
+        IERC20(loanTokenAddress).safeTransfer(msg.sender, amount);
+
+        emit CentuariEventsLib.Withdraw(msg.sender, rate, shares, amount);
     }
 
-    function getUserBorrowShares(uint256 borrowRate, address user) external view override returns (uint256) {
-        //TODO: Add Logic
-        return 0;
+    function supplyCollateral(MarketConfig memory config, uint256 rate, address user, uint256 amount) 
+        external override 
+        nonReentrant 
+        onlyLendingCLOB
+        onlyActiveMarket(config.id())
+        onlyActiveRate(config.id(), rate)
+    {
+        if (user == address(0)) revert CentuariErrorsLib.InvalidUser();
+        if (amount == 0) revert CentuariErrorsLib.InvalidAmount();
+        _accrueInterest(config.id(),rate);
+
+        DataStore storage dataStore = dataStores[config.id()];
+
+        dataStore.setUint(CentuariDSLib.getUserCollateralKey(rate, user), dataStore.getUint(CentuariDSLib.getUserCollateralKey(rate, user)) + amount);
+
+        emit CentuariEventsLib.SupplyCollateral(user, rate, amount);
     }
 
-    function liquidate(uint256 borrowRate, address user) external override {
-        //TODO: Add Logic
+    function withdrawCollateral(MarketConfig memory config, uint256 rate, uint256 amount) 
+        external 
+        override
+        nonReentrant
+        onlyActiveRate(config.id(), rate)
+    {
+        if (amount == 0) revert CentuariErrorsLib.InvalidAmount();
+
+        DataStore storage dataStore = dataStores[config.id()];
+
+        uint256 userCollateral = dataStore.getUint(CentuariDSLib.getUserCollateralKey(rate, msg.sender));
+        if (userCollateral < amount) revert CentuariErrorsLib.InsufficientCollateral();
+
+        _accrueInterest(config.id(), rate);
+
+        dataStore.setUint(CentuariDSLib.getUserCollateralKey(rate, msg.sender), userCollateral - amount);
+
+        if(!_isHealthy(config.id(), rate, msg.sender)) revert CentuariErrorsLib.InsufficientCollateral();
+
+        IERC20(dataStore.getAddress(CentuariDSLib.COLLATERAL_TOKEN_ADDRESS)).safeTransfer(msg.sender, amount);
+
+        emit CentuariEventsLib.WithdrawCollateral(msg.sender, rate, amount);
+    }
+
+    function repay(MarketConfig memory config, uint256 rate, uint256 amount) 
+        external 
+        override
+        nonReentrant
+        onlyActiveMarket(config.id())
+        onlyActiveRate(config.id(), rate)
+    {
+        if (amount == 0) revert CentuariErrorsLib.InvalidAmount();
+        _accrueInterest(config.id(), rate);
+
+        DataStore storage dataStore = dataStores[config.id()];
+        uint256 totalBorrowShares = dataStore.getUint(CentuariDSLib.getTotalBorrowSharesKey(rate));
+        uint256 totalBorrowAssets = dataStore.getUint(CentuariDSLib.getTotalBorrowAssetsKey(rate));
+        uint256 userBorrowShares = dataStore.getUint(CentuariDSLib.getUserBorrowSharesKey(rate, msg.sender));
+
+        if (userBorrowShares < amount) revert CentuariErrorsLib.InsufficientBorrowShares();
+
+        uint256 borrowAmount = (amount * totalBorrowAssets) / totalBorrowShares;
+
+        dataStore.setUint(CentuariDSLib.getUserBorrowSharesKey(rate, msg.sender), userBorrowShares - amount);
+        dataStore.setUint(CentuariDSLib.getTotalBorrowSharesKey(rate), totalBorrowShares - amount);
+        dataStore.setUint(CentuariDSLib.getTotalBorrowAssetsKey(rate), totalBorrowAssets - borrowAmount);
+
+        IERC20(dataStore.getAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS)).safeTransferFrom(msg.sender, address(this), borrowAmount);
+
+        emit CentuariEventsLib.Repay(msg.sender, rate, borrowAmount);
+    }
+
+    function liquidate(MarketConfig memory config, uint256 rate, address user) 
+        external 
+        override
+        nonReentrant
+        onlyActiveRate(config.id(), rate)
+    {
+        if (user == address(0)) revert CentuariErrorsLib.InvalidUser();
+        if (block.timestamp > config.maturity || !_isHealthy(config.id(), rate, user)) revert CentuariErrorsLib.LiquidationNotAllowed();
+
+        DataStore storage dataStore = dataStores[config.id()];
+
+        uint256 totalBorrowShares = dataStore.getUint(CentuariDSLib.getTotalBorrowSharesKey(rate));
+        uint256 totalBorrowAssets = dataStore.getUint(CentuariDSLib.getTotalBorrowAssetsKey(rate));
+        uint256 userBorrowShares = dataStore.getUint(CentuariDSLib.getUserBorrowSharesKey(rate, user));
+        uint256 userCollateral = dataStore.getUint(CentuariDSLib.getUserCollateralKey(rate, user));
+    
+        uint256 debt = (userBorrowShares * totalBorrowAssets) / totalBorrowShares;
+
+        dataStore.setUint(CentuariDSLib.getTotalBorrowSharesKey(rate), totalBorrowShares - userBorrowShares);
+        dataStore.setUint(CentuariDSLib.getTotalBorrowAssetsKey(rate), totalBorrowAssets - debt);
+        dataStore.setUint(CentuariDSLib.getUserBorrowSharesKey(rate, user), 0);
+        dataStore.setUint(CentuariDSLib.getUserCollateralKey(rate, user), 0);
+        
+        //Get token from liquidator
+        IERC20(dataStore.getAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS)).safeTransferFrom(msg.sender,address(this),debt);
+        //Send collateral to liquidator
+        IERC20(dataStore.getAddress(CentuariDSLib.COLLATERAL_TOKEN_ADDRESS)).safeTransfer(msg.sender, userCollateral);
+
+        emit CentuariEventsLib.Liquidate(msg.sender,rate,user,userBorrowShares,userCollateral);
+    }
+
+    function getUserCollateral(MarketConfig memory config, uint256 rate, address user) external view override returns (uint256) {
+        return dataStores[config.id()].getUint(CentuariDSLib.getUserCollateralKey(rate, user));
+    }
+
+    function getUserBorrowShares(MarketConfig memory config, uint256 rate, address user) external view override returns (uint256) {
+        return dataStores[config.id()].getUint(CentuariDSLib.getUserBorrowSharesKey(rate, user));
     }
 
     function flashLoan(address token, uint256 assets, bytes calldata data) external {

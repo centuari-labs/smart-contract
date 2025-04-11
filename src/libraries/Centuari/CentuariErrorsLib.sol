@@ -8,8 +8,12 @@ library CentuariErrorsLib {
     error MarketNotActive();
     error InvalidLltv();
     error InvalidOracle();
-    error BorrowRateAlreadyExists();
-    error InvalidBorrowRate();
+    error RateAlreadyExists();
+    error InvalidRate();
+    error InsufficientCollateral();
+    error OnlyLendingCLOB();
+    error InsufficientLiquidity();
+    error LiquidationNotAllowed();
 
     string internal constant INVALID_MARKET_CONFIG = "Invalid market configuration";
 }

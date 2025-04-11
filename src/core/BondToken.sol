@@ -5,7 +5,6 @@ import {Ownable} from "@openzeppelin/access/Ownable.sol";
 import {ERC20} from "@openzeppelin/token/ERC20/ERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/token/ERC20/extensions/IERC20Metadata.sol";
 import {Strings} from "@openzeppelin/utils/Strings.sol";
-import {DateLib} from "../libraries/DateLib.sol";
 
 /// @title BondToken
 /// @notice A specialized ERC20 token representing lending positions in the Centuari protocol

@@ -5,11 +5,10 @@ import {AccessControl} from "@openzeppelin/access/AccessControl.sol";
 
 contract DataStore is AccessControl {
     // Define roles
-    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
     bytes32 public constant CONTROLLER_ROLE = keccak256("CONTROLLER_ROLE");
 
-    constructor(address controller_, address owner_) {
-        _grantRole(OWNER_ROLE, owner_);
+    constructor(address owner_, address controller_) {
+        _grantRole(DEFAULT_ADMIN_ROLE, owner_);
         _grantRole(CONTROLLER_ROLE, controller_);
     }
 
