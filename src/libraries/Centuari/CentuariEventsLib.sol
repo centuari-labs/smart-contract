@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 library CentuariEventsLib {
-    event FlashLoan(address indexed caller, address indexed token, uint256 assets);
+    event FlashLoan(address indexed caller, address indexed token, uint256 amount);
     event LltvUpdated(uint256 indexed id, uint256 lltv);
     event OracleUpdated(uint256 indexed id, address oracle);
     event Supply(address indexed user, uint256 rate, uint256 shares, uint256 assets);

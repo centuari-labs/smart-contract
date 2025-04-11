@@ -10,6 +10,7 @@ import {IERC20Metadata} from "@openzeppelin/token/ERC20/extensions/IERC20Metadat
 
 // Internal imports - interfaces
 import {ICentuari} from "../interfaces/ICentuari.sol";
+import {ICentuariFlashLoanCallback} from "../interfaces/ICentuariCallbacks.sol";
 import {IMockOracle} from "../interfaces/IMockOracle.sol";
 
 // Internal imports - libraries
@@ -384,7 +385,14 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         return dataStores[config.id()].getUint(CentuariDSLib.getUserBorrowSharesKey(rate, user));
     }
 
-    function flashLoan(address token, uint256 assets, bytes calldata data) external {
-        //TODO: Add Logic
+    function flashLoan(address token, uint256 amount, bytes calldata data) external {
+        if(amount == 0) revert CentuariErrorsLib.InvalidAmount();
+        emit CentuariEventsLib.FlashLoan(msg.sender, token, amount);
+
+        IERC20(token).safeTransfer(msg.sender, amount);
+
+        ICentuariFlashLoanCallback(msg.sender).onCentuariFlashLoan(token, amount, data);
+
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
     }
 }

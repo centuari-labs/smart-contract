@@ -18,5 +18,4 @@ interface ICentuari {
     function liquidate(MarketConfig memory config, uint256 rate, address user) external;
     function getUserCollateral(MarketConfig memory config, uint256 rate, address user) external view returns (uint256);
     function getUserBorrowShares(MarketConfig memory config, uint256 rate, address user) external view returns (uint256);
-    function flashLoan(address token, uint256 assets, bytes calldata data) external;
 }
