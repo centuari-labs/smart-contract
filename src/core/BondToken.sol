@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {Ownable} from "@openzeppelin/access/Ownable.sol";
-import {ERC20} from "@openzeppelin/token/ERC20/ERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/token/ERC20/extensions/IERC20Metadata.sol";
-import {Strings} from "@openzeppelin/utils/Strings.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 /// @title BondToken
 /// @notice A specialized ERC20 token representing lending positions in the Centuari protocol
@@ -30,12 +30,13 @@ contract BondToken is Ownable, ERC20 {
     /// @param maturityMonth String representation of maturity month (e.g., "JAN")
     /// @param maturityYear Year of maturity
     struct BondTokenConfig {
-        address debtToken;
+        address loanToken;
         address collateralToken;
         uint256 rate;
         uint256 maturity;
         string maturityMonth;
         uint256 maturityYear;
+        uint256 decimals;
     }
 
     /// @notice Information about the current Centuari token instance
@@ -52,7 +53,7 @@ contract BondToken is Ownable, ERC20 {
             string(
                 abi.encodePacked(
                     "POC ",
-                    IERC20Metadata(config_.debtToken).symbol(),
+                    IERC20Metadata(config_.loanToken).symbol(),
                     "/",
                     IERC20Metadata(config_.collateralToken).symbol(),
                     " ",
@@ -67,7 +68,7 @@ contract BondToken is Ownable, ERC20 {
             string(
                 abi.encodePacked(
                     "poc",
-                    IERC20Metadata(config_.debtToken).symbol(),
+                    IERC20Metadata(config_.loanToken).symbol(),
                     IERC20Metadata(config_.collateralToken).symbol(),
                     (config_.rate / 1e14).toString(),
                     "R",
@@ -78,7 +79,7 @@ contract BondToken is Ownable, ERC20 {
         )
     {
         if (
-            config_.debtToken == address(0) || config_.collateralToken == address(0) || config_.rate == 0
+            config_.loanToken == address(0) || config_.collateralToken == address(0) || config_.rate == 0
                 || config_.maturity <= block.timestamp || bytes(config_.maturityMonth).length == 0
                 || config_.maturityYear == 0
         ) {

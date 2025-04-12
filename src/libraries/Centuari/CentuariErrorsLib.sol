@@ -16,4 +16,7 @@ library CentuariErrorsLib {
     error OnlyLendingCLOB();
     error InsufficientLiquidity();
     error LiquidationNotAllowed();
+    error MarketNotMature();
+    error InsufficientShares();
+    error InsufficientBorrowShares();
 }

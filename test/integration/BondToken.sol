@@ -2,8 +2,8 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
-import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {BondToken} from "../../src/core/BondToken.sol";
 import {MockToken} from "../../src/mocks/MockToken.sol";
 
@@ -12,7 +12,7 @@ import {MockToken} from "../../src/mocks/MockToken.sol";
 /// @dev Inherits from Forge's Test contract for testing utilities
 contract BondTokenTest_Base is Test {
     /// @notice Mock USDC token address
-    address public debtToken;
+    address public loanToken;
     /// @notice Mock ETH token address
     address public collateralToken;
     /// @notice The BondToken instance being tested
@@ -23,22 +23,22 @@ contract BondTokenTest_Base is Test {
     /// @notice Sets up the test environment before each test
     /// @dev Deploys mock tokens and BondToken with initial configuration
     function setUp() public {
-        debtToken = address(new MockToken("Mock USDC", "MUSDC", 6));
+        loanToken = address(new MockToken("Mock USDC", "MUSDC", 6));
         collateralToken = address(new MockToken("Mock ETH", "METH", 18));
 
-        BondToken.BondTokenInfo memory info = BondToken.BondTokenInfo({
-            debtToken: debtToken,
+        BondToken.BondTokenConfig memory config = BondToken.BondTokenConfig({
+            loanToken: loanToken,
             collateralToken: collateralToken,
             rate: 45e16,
             maturity: 1715280000,
             maturityMonth: "MAY",
             maturityYear: 2025,
-            decimals: 6
+            decimals: IERC20Metadata(loanToken).decimals()
         });
 
         bondToken = new BondToken(
             address(this), // lending pool address
-            info
+            config
         );
         address1 = makeAddr("address1");
     }
@@ -55,16 +55,16 @@ contract BondTokenTest_Constructor is BondTokenTest_Base {
         console.log("Token Name:", IERC20Metadata(bondToken).name());
 
         (
-            address debtToken_,
+            address loanToken_,
             address collateralToken_,
             uint256 rate_,
             uint256 maturity_,
             string memory maturityMonth_,
             uint256 maturityYear_,
             uint256 decimals_
-        ) = bondToken.info();
+        ) = bondToken.config();
 
-        assertEq(debtToken_, debtToken, "Incorrect debt token address");
+        assertEq(loanToken_, loanToken, "Incorrect loan token address");
         assertEq(collateralToken_, collateralToken, "Incorrect collateral token address");
         assertEq(rate_, 45e16, "Incorrect borrow rate");
         assertEq(maturity_, 1715280000, "Incorrect maturity timestamp");

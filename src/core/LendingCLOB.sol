@@ -1,37 +1,43 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Ownable} from "@openzeppelin/access/Ownable.sol";
-import {Id, MarketConfig} from "../types/CommonTypes.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Id, MarketConfig, Side} from "../types/CommonTypes.sol";
 import {MarketConfigLib} from "../libraries/MarketConfigLib.sol";
 
 contract LendingCLOB is Ownable {
     using MarketConfigLib for MarketConfig;
 
+    struct Order {
+        uint256 amount;
+        uint256 collateralAmount;
+        uint256 rate;
+        Side side;
+    }
+
     mapping(Id => address) public dataStores;
+    mapping(address => Order[]) public traderOrders;
     address public centuari;
 
     constructor(address owner_, address centuari_) Ownable(owner_) {
         centuari = centuari_;
     }
 
-    function createClob(MarketConfig config) external onlyOwner {
+    function createClob(MarketConfig calldata config) external onlyOwner {
         //TODO: Add logic + Create Datastore
         //Add DataStore to mapping DataStoreConfig
         //Call Centuari.createDataStore
     }
 
-    function setDataStore(MarketConfig config, address dataStore) external onlyOwner {
+    function setDataStore(MarketConfig calldata config, address dataStore) external onlyOwner {
         //TODO: Add logic
     }
 
     function placeOrder(address trader, uint256 amount, uint256 collateralAmount, uint256 rate, Side side)
         external
         onlyOwner
-        returns (MatchedInfo[] memory matchedLendOrders, MatchedInfo[] memory matchedBorrowOrders)
     {
         //TODO: Add logic
-        return (matchedLendOrders, matchedBorrowOrders);
     }
 
     function cancelOrder(address trader, uint256 orderId) external {

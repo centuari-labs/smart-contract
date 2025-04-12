@@ -40,16 +40,15 @@ contract BaseTest is Test {
         mockOracle = new MockOracle(address(usdc), address(weth));
 
         // Deploy BondToken
-        BondToken.BondTokenInfo memory info = BondToken.BondTokenInfo({
+        BondToken.BondTokenConfig memory config = BondToken.BondTokenConfig({
             debtToken: address(usdc),
             collateralToken: address(weth),
             rate: BORROW_RATE,
             maturity: MATURITY,
             maturityMonth: MATURITY_MONTH,
-            maturityYear: MATURITY_YEAR,
-            decimals: DECIMALS
+            maturityYear: MATURITY_YEAR
         });
 
-        bondToken = new BondToken(address(this), info);
+        bondToken = new BondToken(address(this), config);
     }
 }

@@ -2,11 +2,11 @@
 pragma solidity ^0.8.24;
 
 // External imports
-import {Ownable} from "@openzeppelin/access/Ownable.sol";
-import {ReentrancyGuard} from "@openzeppelin/utils/ReentrancyGuard.sol";
-import {IERC20} from "@openzeppelin/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
-import {IERC20Metadata} from "@openzeppelin/token/ERC20/extensions/IERC20Metadata.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 // Internal imports - interfaces
 import {ICentuari} from "../interfaces/ICentuari.sol";
@@ -168,11 +168,13 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
 
         //Create new Bond Token
         BondToken.BondTokenConfig memory bondTokenConfig = BondToken.BondTokenConfig({
-            debtToken: config.loanToken,
+            loanToken: config.loanToken,
             collateralToken: config.collateralToken,
+            rate: rate_,
             maturity: config.maturity,
             maturityMonth: DateLib.getMonth(config.maturity),
-            maturityYear: DateLib.getYear(config.maturity)
+            maturityYear: DateLib.getYear(config.maturity),
+            decimals: IERC20Metadata(config.loanToken).decimals()
         });
         BondToken bondToken = new BondToken(address(this), bondTokenConfig);
         dataStore.setAddress(CentuariDSLib.getBondTokenAddressKey(rate_), address(bondToken));
@@ -252,7 +254,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         onlyActiveRate(config.id(), rate)
     {
         if (shares == 0) revert CentuariErrorsLib.InvalidAmount();
-        if (block.timestamp < config.maturity) revert CentuariErrorsLib.MaturityNotReached();
+        if (block.timestamp < config.maturity) revert CentuariErrorsLib.MarketNotMature();
 
         DataStore dataStore = DataStore(dataStores[config.id()]);
         uint256 totalSupplyShares = dataStore.getUint(CentuariDSLib.getTotalSuppySharesKey(rate));

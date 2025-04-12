@@ -9,3 +9,8 @@ struct MarketConfig {
     address collateralToken;
     uint256 maturity;
 }
+
+enum Side {
+    LEND,
+    BORROW
+}

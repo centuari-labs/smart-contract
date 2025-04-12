@@ -10,10 +10,10 @@ interface ICentuari {
     function setOracle(MarketConfig memory config, address oracle) external;
     function accrueInterest(MarketConfig memory config, uint256 rate) external;
     function addRate(MarketConfig memory config, uint256 rate) external;
-    function supply(MarketConfig memory config, int256 rate, address user, uint256 amount) external;
-    function withdraw(MarketConfig memory config, address user, uint256 amount) external;
+    function supply(MarketConfig memory config, uint256 rate, address user, uint256 amount) external;
+    function withdraw(MarketConfig memory config, uint256 rate, uint256 shares) external;
     function supplyCollateral(MarketConfig memory config, uint256 rate, address user, uint256 amount) external;
-    function withdrawCollateral(MarketConfig memory config, uint256 rate, address user, uint256 amount) external;
+    function withdrawCollateral(MarketConfig memory config, uint256 rate, uint256 amount) external;
     function repay(MarketConfig memory config, uint256 rate, uint256 amount) external;
     function liquidate(MarketConfig memory config, uint256 rate, address user) external;
     function getUserCollateral(MarketConfig memory config, uint256 rate, address user)
