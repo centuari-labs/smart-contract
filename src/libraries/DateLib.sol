@@ -7,7 +7,7 @@ library DateLib {
     /// @return monthString The 3-letter month string
     function getMonth(uint256 timestamp) internal pure returns (string memory monthString) {
         uint256 month = (timestamp / 2629743) % 12; // Approximate month from timestamp
-        
+
         if (month == 0) return "JAN";
         if (month == 1) return "FEB";
         if (month == 2) return "MAR";
@@ -28,4 +28,4 @@ library DateLib {
     function getYear(uint256 timestamp) internal pure returns (uint256 year) {
         return 1970 + (timestamp / 31556926); // Approximate year from timestamp
     }
-} 
+}

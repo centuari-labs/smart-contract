@@ -9,7 +9,7 @@ library CentuariDSLib {
     bytes32 public constant ORACLE_ADDRESS = keccak256("ORACLE");
     bytes32 public constant LLTV_UINT256 = keccak256("LLTV");
     bytes32 public constant IS_MARKET_ACTIVE_BOOL = keccak256("IS_MARKET_ACTIVE");
-    
+
     //Lending Pool Data
     string public constant TOTAL_SUPPLY_SHARES_UINT256 = "TOTAL_SUPPLY_SHARES";
     string public constant TOTAL_SUPPLY_ASSETS_UINT256 = "TOTAL_SUPPLY_ASSETS";
@@ -39,6 +39,10 @@ library CentuariDSLib {
 
     function getUserBorrowSharesKey(uint256 rate, address user) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(rate, user, USER_BORROW_SHARES_UINT256));
+    }
+
+    function getUserCollateralKey(uint256 rate, address user) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(rate, user, USER_COLLATERAL_UINT256));
     }
 
     function getUserBorrowAssetsKey(uint256 rate, address user) internal pure returns (bytes32) {

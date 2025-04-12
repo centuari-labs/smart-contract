@@ -46,10 +46,7 @@ contract BondToken is Ownable, ERC20 {
     /// @dev Initializes the token with a dynamic name and symbol based on the provided parameters
     /// @param centuari_ Address of the centuari that will own this token
     /// @param config_ Struct containing all token parameters
-    constructor(
-        address centuari_,
-        BondTokenConfig memory config_
-    )
+    constructor(address centuari_, BondTokenConfig memory config_)
         Ownable(centuari_)
         ERC20(
             string(
@@ -59,7 +56,8 @@ contract BondToken is Ownable, ERC20 {
                     "/",
                     IERC20Metadata(config_.collateralToken).symbol(),
                     " ",
-                    (config_.rate / 1e14).toString(), "RATE",
+                    (config_.rate / 1e14).toString(),
+                    "RATE",
                     " ",
                     config_.maturityMonth,
                     "-",
@@ -71,7 +69,8 @@ contract BondToken is Ownable, ERC20 {
                     "poc",
                     IERC20Metadata(config_.debtToken).symbol(),
                     IERC20Metadata(config_.collateralToken).symbol(),
-                    (config_.rate / 1e14).toString(), "R",
+                    (config_.rate / 1e14).toString(),
+                    "R",
                     config_.maturityMonth,
                     config_.maturityYear.toString()
                 )
@@ -79,12 +78,9 @@ contract BondToken is Ownable, ERC20 {
         )
     {
         if (
-            config_.debtToken == address(0) || 
-            config_.collateralToken == address(0) || 
-            config_.rate == 0 ||
-            config_.maturity <= block.timestamp || 
-            bytes(config_.maturityMonth).length == 0 || 
-            config_.maturityYear == 0
+            config_.debtToken == address(0) || config_.collateralToken == address(0) || config_.rate == 0
+                || config_.maturity <= block.timestamp || bytes(config_.maturityMonth).length == 0
+                || config_.maturityYear == 0
         ) {
             revert InvalidBondTokenInfo();
         }

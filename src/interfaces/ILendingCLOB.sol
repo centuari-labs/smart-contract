@@ -13,6 +13,7 @@ interface ILendingCLOB {
         FILLED, // Order is completely matched
         CANCELLED, // Order was cancelled by the trader
         EXPIRED // Order has expired (reserved for future use)
+
     }
 
     /// @notice Represents the side of an order
@@ -20,6 +21,7 @@ interface ILendingCLOB {
     enum Side {
         LEND, // Lender providing debt token
         BORROW // Borrower providing collateral token and amount to borrow
+
     }
 
     /// @notice Detailed information about an order in the book
