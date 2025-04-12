@@ -64,9 +64,11 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
 
     function createDataStore(MarketConfig memory config) external onlyLendingCLOB {
         // Validate market config
-        require(config.loanToken != address(0), CentuariErrorsLib.INVALID_MARKET_CONFIG);
-        require(config.collateralToken != address(0), CentuariErrorsLib.INVALID_MARKET_CONFIG);
-        require(config.maturity > block.timestamp, CentuariErrorsLib.INVALID_MARKET_CONFIG);
+        if(
+            config.loanToken == address(0) || 
+            config.collateralToken == address(0) || 
+            config.maturity <= block.timestamp
+        ) revert CentuariErrorsLib.InvalidMarketConfig();
 
         Id marketConfigId = config.id();
         DataStore dataStore = new DataStore(owner(), address(this));
@@ -81,9 +83,11 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
 
     function setDataStore(MarketConfig memory config, address dataStore) external onlyOwner {
         //Validate market config
-        require(config.loanToken != address(0), CentuariErrorsLib.INVALID_MARKET_CONFIG);
-        require(config.collateralToken != address(0), CentuariErrorsLib.INVALID_MARKET_CONFIG);
-        require(config.maturity > block.timestamp, CentuariErrorsLib.INVALID_MARKET_CONFIG);
+        if(
+            config.loanToken == address(0) || 
+            config.collateralToken == address(0) || 
+            config.maturity <= block.timestamp
+        ) revert CentuariErrorsLib.InvalidMarketConfig();
 
         dataStores[config.id()] = dataStore;
     }

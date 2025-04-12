@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 library CentuariErrorsLib {
+    error InvalidMarketConfig();
     error InvalidUser();    
     error InvalidAmount();
     error MarketExpired();
@@ -14,6 +15,4 @@ library CentuariErrorsLib {
     error OnlyLendingCLOB();
     error InsufficientLiquidity();
     error LiquidationNotAllowed();
-
-    string internal constant INVALID_MARKET_CONFIG = "Invalid market configuration";
 }
