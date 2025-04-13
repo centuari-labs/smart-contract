@@ -93,12 +93,11 @@ contract DataStoreIntegrationTest is BaseTest {
         ICentuari(centuari).createDataStore(configInvalidCollateral);
 
         // Use invalid market config with past maturity
-        uint256 mockTimestamp = 1000000;
-        vm.warp(1000000);
+        vm.warp(MOCK_TIMESTAMP);
         MarketConfig memory configInvalidMaturity = MarketConfig({
             loanToken: address(usdc),
             collateralToken: address(weth),
-            maturity: mockTimestamp - 1 days
+            maturity: MOCK_TIMESTAMP - 1 days
         });
     
         // Expect revert for invalid maturity

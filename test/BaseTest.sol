@@ -7,11 +7,11 @@ import {BondToken} from "../src/core/BondToken.sol";
 import {MockOracle} from "../src/mocks/MockOracle.sol";
 import {Centuari} from "../src/core/Centuari.sol";
 import {LendingCLOB} from "../src/core/LendingCLOB.sol";
+import {MarketConfig} from "../src/types/CommonTypes.sol";
 
 /// @title Centuari Base Test
 /// @notice Provides shared setup for unit tests across the protocol
 contract BaseTest is Test {
-
     /// --- Common Addresses ---
     address internal address1;
     address internal owner;
@@ -29,6 +29,7 @@ contract BaseTest is Test {
 
     /// --- Centuari ---
     Centuari internal centuari;
+    MarketConfig internal usdcWethMarketConfig;
 
     /// --- LendingCLOB ---
     LendingCLOB internal lendingCLOB;
@@ -39,6 +40,7 @@ contract BaseTest is Test {
     string internal constant MATURITY_MONTH = "MAY";
     uint256 internal constant MATURITY_YEAR = 2025;
     uint8 internal constant DECIMALS = 6;
+    uint256 internal constant MOCK_TIMESTAMP = 1000000;
 
     function setUp() public virtual {
         address1 = makeAddr("address1");
@@ -67,6 +69,13 @@ contract BaseTest is Test {
 
         //Deploy Centuari
         centuari = new Centuari(address(this));
+        usdcWethMarketConfig = MarketConfig({
+            loanToken: address(usdc),
+            collateralToken: address(weth),
+            maturity: MATURITY
+        });
+        vm.prank(address(lendingCLOB));
+        centuari.createDataStore(usdcWethMarketConfig);
 
         //Deploy LendingCLOB
         lendingCLOB = new LendingCLOB(address(this), address(centuari));

@@ -161,7 +161,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         dataStore.setUint(CentuariDSLib.getLastAccrueKey(rate), maxLastTimestamp);
     }
 
-    function addRate(MarketConfig memory config, uint256 rate_) external onlyActiveMarket(config.id()) {
+    function addRate(MarketConfig memory config, uint256 rate_) external onlyLendingCLOB onlyActiveMarket(config.id()) {
         DataStore dataStore = DataStore(dataStores[config.id()]);
         if (dataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(rate_)) != address(0)) {
             revert CentuariErrorsLib.RateAlreadyExists();
