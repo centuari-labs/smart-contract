@@ -41,12 +41,13 @@ contract BaseTest is Test {
 
         // Deploy BondToken
         BondToken.BondTokenConfig memory config = BondToken.BondTokenConfig({
-            debtToken: address(usdc),
+            loanToken: address(usdc),
             collateralToken: address(weth),
             rate: BORROW_RATE,
             maturity: MATURITY,
             maturityMonth: MATURITY_MONTH,
-            maturityYear: MATURITY_YEAR
+            maturityYear: MATURITY_YEAR,
+            decimals:usdc.decimals()
         });
 
         bondToken = new BondToken(address(this), config);
