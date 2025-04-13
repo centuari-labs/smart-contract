@@ -32,7 +32,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     mapping(Id => address) public dataStores;
-    address public immutable lendingCLOB;
+    address public lendingCLOB;
 
     modifier onlyActiveMarket(Id id) {
         DataStore dataStore = DataStore(dataStores[id]);
@@ -60,11 +60,13 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         _;
     }
 
-    constructor(address owner_, address lendingCLOB_) Ownable(owner_) {
+    constructor(address owner_) Ownable(owner_) {}
+
+    function setLendingCLOB(address lendingCLOB_) external onlyOwner {
         lendingCLOB = lendingCLOB_;
     }
 
-    function createDataStore(MarketConfig memory config) external onlyLendingCLOB {
+    function createDataStore(MarketConfig memory config) external onlyLendingCLOB returns (address) {
         // Validate market config
         if (
             config.loanToken == address(0) || config.collateralToken == address(0) || config.maturity <= block.timestamp
@@ -79,6 +81,8 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         dataStore.setAddress(CentuariDSLib.COLLATERAL_TOKEN_ADDRESS, config.collateralToken);
         dataStore.setUint(CentuariDSLib.MATURITY_UINT256, config.maturity);
         dataStore.setBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL, true);
+
+        return address(dataStore);
     }
 
     function setDataStore(MarketConfig memory config, address dataStore) external onlyOwner {

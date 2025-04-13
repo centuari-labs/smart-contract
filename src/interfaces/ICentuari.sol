@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {MarketConfig} from "../types/CommonTypes.sol";
 
 interface ICentuari {
-    function createDataStore(MarketConfig memory config) external;
+    function createDataStore(MarketConfig memory config) external returns (address);
     function setDataStore(MarketConfig memory config, address dataStore) external;
     function setLltv(MarketConfig memory config, uint256 lltv) external;
     function setOracle(MarketConfig memory config, address oracle) external;
@@ -16,12 +16,6 @@ interface ICentuari {
     function withdrawCollateral(MarketConfig memory config, uint256 rate, uint256 amount) external;
     function repay(MarketConfig memory config, uint256 rate, uint256 amount) external;
     function liquidate(MarketConfig memory config, uint256 rate, address user) external;
-    function getUserCollateral(MarketConfig memory config, uint256 rate, address user)
-        external
-        view
-        returns (uint256);
-    function getUserBorrowShares(MarketConfig memory config, uint256 rate, address user)
-        external
-        view
-        returns (uint256);
+    function getUserCollateral(MarketConfig memory config, uint256 rate, address user) external view returns (uint256);
+    function getUserBorrowShares(MarketConfig memory config, uint256 rate, address user) external view returns (uint256);
 }

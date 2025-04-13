@@ -7,9 +7,12 @@ contract DataStore is AccessControl {
     // Define roles
     bytes32 public constant CONTROLLER_ROLE = keccak256("CONTROLLER_ROLE");
 
+    address controller;
+
     constructor(address owner_, address controller_) {
         _grantRole(DEFAULT_ADMIN_ROLE, owner_);
         _grantRole(CONTROLLER_ROLE, controller_);
+        controller = controller_;
     }
 
     // store for uint values
@@ -20,6 +23,11 @@ contract DataStore is AccessControl {
     mapping(bytes32 => bool) public boolValues;
     // store for string values
     mapping(bytes32 => string) public stringValues;
+
+    function setController(address controller_) external onlyRole(DEFAULT_ADMIN_ROLE){
+        _grantRole(CONTROLLER_ROLE, controller_);
+        _revokeRole(CONTROLLER_ROLE, controller);
+    }
 
     // @dev get the uint value for the given key
     // @param key the key of the value

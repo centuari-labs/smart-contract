@@ -1,19 +1,24 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
 import {MockToken} from "../src/mocks/MockToken.sol";
 import {BondToken} from "../src/core/BondToken.sol";
 import {MockOracle} from "../src/mocks/MockOracle.sol";
+import {Centuari} from "../src/core/Centuari.sol";
+import {LendingCLOB} from "../src/core/LendingCLOB.sol";
 
 /// @title Centuari Base Test
 /// @notice Provides shared setup for unit tests across the protocol
 contract BaseTest is Test {
+
     /// --- Common Addresses ---
     address internal address1;
+    address internal owner;
 
     /// --- Tokens ---
     MockToken internal usdc;
+    MockToken internal wbtc;
     MockToken internal weth;
 
     /// --- BondToken ---
@@ -22,8 +27,14 @@ contract BaseTest is Test {
     /// --- Oracle ---
     MockOracle internal mockOracle;
 
+    /// --- Centuari ---
+    Centuari internal centuari;
+
+    /// --- LendingCLOB ---
+    LendingCLOB internal lendingCLOB;
+
     /// --- Shared Constants ---
-    uint256 internal constant BORROW_RATE = 45e16;
+    uint256 internal constant RATE = 45e16;
     uint256 internal constant MATURITY = 1715280000;
     string internal constant MATURITY_MONTH = "MAY";
     uint256 internal constant MATURITY_YEAR = 2025;
@@ -31,9 +42,11 @@ contract BaseTest is Test {
 
     function setUp() public virtual {
         address1 = makeAddr("address1");
+        owner = address(this);
 
         // Deploy mock tokens
         usdc = new MockToken("Mock USDC", "MUSDC", DECIMALS);
+        wbtc = new MockToken("Mock WBTC", "MWBTC", 8);
         weth = new MockToken("Mock ETH", "METH", 18);
 
         // Deploy mock oracle
@@ -43,7 +56,7 @@ contract BaseTest is Test {
         BondToken.BondTokenConfig memory config = BondToken.BondTokenConfig({
             loanToken: address(usdc),
             collateralToken: address(weth),
-            rate: BORROW_RATE,
+            rate: RATE,
             maturity: MATURITY,
             maturityMonth: MATURITY_MONTH,
             maturityYear: MATURITY_YEAR,
@@ -51,5 +64,14 @@ contract BaseTest is Test {
         });
 
         bondToken = new BondToken(address(this), config);
+
+        //Deploy Centuari
+        centuari = new Centuari(address(this));
+
+        //Deploy LendingCLOB
+        lendingCLOB = new LendingCLOB(address(this), address(centuari));
+
+        //Set LendingCLOB address for Centuari
+        centuari.setLendingCLOB(address(lendingCLOB));
     }
 }
