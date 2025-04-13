@@ -102,11 +102,11 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         emit CentuariEventsLib.OracleUpdated(config.id(), oracle_);
     }
 
-    function _isHealthy(MarketConfig memory config, uint256 rate, address user) internal view returns (bool) {
-        DataStore dataStore = DataStore(dataStores[config.id()]);
+    function _isHealthy(Id id, uint256 rate, address user) internal view returns (bool) {
+        DataStore dataStore = DataStore(dataStores[id]);
 
         uint256 collateralPrice = IMockOracle(dataStore.getAddress(CentuariDSLib.ORACLE_ADDRESS)).price();
-        uint256 collateralDecimals = 10 ** IERC20Metadata(config.collateralToken).decimals();
+        uint256 collateralDecimals = 10 ** IERC20Metadata(dataStore.getAddress(CentuariDSLib.COLLATERAL_TOKEN_ADDRESS)).decimals();
 
         uint256 borrowedValue = (
             dataStore.getUint(CentuariDSLib.getUserBorrowSharesKey(rate, user))
@@ -129,7 +129,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
 
     function _accrueInterest(Id id, uint256 rate) internal {
         DataStore dataStore = DataStore(dataStores[id]);
-        uint256 totalBorrowAssets = dataStore.getUint(CentuariDSLib.TOTAL_BORROW_ASSETS_UINT256);
+        uint256 totalBorrowAssets = dataStore.getUint(CentuariDSLib.getTotalBorrowAssetsKey(rate));
         uint256 interestPerYear = (totalBorrowAssets * rate) / 1e18;
 
         // Cap time passed at maturity
@@ -137,24 +137,24 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         uint256 maxLastTimestamp;
         if (block.timestamp > dataStore.getUint(CentuariDSLib.MATURITY_UINT256)) {
             timePassed =
-                dataStore.getUint(CentuariDSLib.MATURITY_UINT256) - dataStore.getUint(CentuariDSLib.LAST_ACCRUE_UINT256);
+                dataStore.getUint(CentuariDSLib.MATURITY_UINT256) - dataStore.getUint(CentuariDSLib.getLastAccrueKey(rate));
             maxLastTimestamp = dataStore.getUint(CentuariDSLib.MATURITY_UINT256);
         } else {
-            timePassed = block.timestamp - dataStore.getUint(CentuariDSLib.LAST_ACCRUE_UINT256);
+            timePassed = block.timestamp - dataStore.getUint(CentuariDSLib.getLastAccrueKey(rate));
             maxLastTimestamp = block.timestamp;
         }
 
         uint256 interest = (interestPerYear * timePassed) / 365 days;
 
         dataStore.setUint(
-            CentuariDSLib.TOTAL_SUPPLY_ASSETS_UINT256,
-            dataStore.getUint(CentuariDSLib.TOTAL_SUPPLY_ASSETS_UINT256) + interest
+            CentuariDSLib.getTotalSuppyAssetsKey(rate),
+            dataStore.getUint(CentuariDSLib.getTotalSuppyAssetsKey(rate)) + interest
         );
         dataStore.setUint(
-            CentuariDSLib.TOTAL_BORROW_ASSETS_UINT256,
-            dataStore.getUint(CentuariDSLib.TOTAL_BORROW_ASSETS_UINT256) + interest
+            CentuariDSLib.getTotalBorrowAssetsKey(rate),
+            dataStore.getUint(CentuariDSLib.getTotalBorrowAssetsKey(rate)) + interest
         );
-        dataStore.setUint(CentuariDSLib.LAST_ACCRUE_UINT256, maxLastTimestamp);
+        dataStore.setUint(CentuariDSLib.getLastAccrueKey(rate), maxLastTimestamp);
     }
 
     function addRate(MarketConfig memory config, uint256 rate_) external onlyActiveMarket(config.id()) {
