@@ -4,10 +4,12 @@ pragma solidity ^0.8.24;
 import {BaseTest} from "../../BaseTest.sol";
 import {MarketConfig, Id} from "../../../src/types/CommonTypes.sol";
 import {MarketConfigLib} from "../../../src/libraries/MarketConfigLib.sol";
+import {Centuari} from "../../../src/core/Centuari.sol";
 import {ICentuari} from "../../../src/interfaces/ICentuari.sol";
 import {DataStore} from "../../../src/core/DataStore.sol";
 import {CentuariDSLib} from "../../../src/libraries/Centuari/CentuariDSLib.sol";
 import {CentuariErrorsLib} from "../../../src/libraries/Centuari/CentuariErrorsLib.sol";
+import {CentuariEventsLib} from "../../../src/libraries/Centuari/CentuariEventsLib.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract DataStoreIntegrationTest is BaseTest {
@@ -23,8 +25,13 @@ contract DataStoreIntegrationTest is BaseTest {
             maturity: block.timestamp + 100 days
         });
 
-        address dataStore = ICentuari(centuari).createDataStore(config);
-        assertEq(centuari.dataStores(config.id()), dataStore);
+        //Expect CreateDataStore event
+        vm.expectEmit(false, false, false, true);
+        emit CentuariEventsLib.CreateDataStore(address(0), config.loanToken, config.collateralToken, config.maturity);
+
+        ICentuari(centuari).createDataStore(config);
+        address dataStore = Centuari(centuari).dataStores(config.id());
+    
         assertEq(DataStore(dataStore).getAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS), config.loanToken);
         assertEq(DataStore(dataStore).getAddress(CentuariDSLib.COLLATERAL_TOKEN_ADDRESS), config.collateralToken);
         assertEq(DataStore(dataStore).getUint(CentuariDSLib.MATURITY_UINT256), config.maturity);
@@ -42,7 +49,8 @@ contract DataStoreIntegrationTest is BaseTest {
             maturity: block.timestamp + 100 days
         });
 
-        address dataStore = ICentuari(centuari).createDataStore(config);
+        ICentuari(centuari).createDataStore(config);
+        address dataStore = Centuari(centuari).dataStores(config.id());
 
         //Validate if the DataStore is set with the correct values
         assertEq(centuari.dataStores(config.id()), dataStore);
@@ -51,11 +59,17 @@ contract DataStoreIntegrationTest is BaseTest {
         assertEq(DataStore(dataStore).getUint(CentuariDSLib.MATURITY_UINT256), config.maturity);
         assertEq(DataStore(dataStore).getBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL), true);
 
-        address newDataStore = ICentuari(centuari).createDataStore(config);
+        ICentuari(centuari).createDataStore(config);
+        address newDataStore = Centuari(centuari).dataStores(config.id());
 
         //Change caller to owner to call setDataStore
         vm.stopPrank();
         vm.prank(owner);
+
+        //Expect SetDataStore event
+        vm.expectEmit(true, false, false, false);
+        emit CentuariEventsLib.SetDataStore(newDataStore, config.loanToken, config.collateralToken, config.maturity);
+
         ICentuari(centuari).setDataStore(config, newDataStore);
 
         //Validate if the DataStore is set with the correct values
@@ -116,7 +130,8 @@ contract DataStoreIntegrationTest is BaseTest {
             maturity: block.timestamp + 100 days
         });
 
-        address dataStore = ICentuari(centuari).createDataStore(config);
+        ICentuari(centuari).createDataStore(config);
+        address dataStore = Centuari(centuari).dataStores(config.id());
 
         //Change caller to ownern to setDataStore
         vm.startPrank(owner);
@@ -184,7 +199,8 @@ contract DataStoreIntegrationTest is BaseTest {
         ICentuari(centuari).createDataStore(config);
 
         //Create new DataStore
-        address newDataStore = ICentuari(centuari).createDataStore(config);
+        ICentuari(centuari).createDataStore(config);
+        address newDataStore = Centuari(centuari).dataStores(config.id());
 
         //Change caller to random address and call setDataStore
         vm.stopPrank();

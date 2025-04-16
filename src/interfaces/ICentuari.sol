@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {MarketConfig} from "../types/CommonTypes.sol";
 
 interface ICentuari {
-    function createDataStore(MarketConfig memory config) external returns (address);
+    function createDataStore(MarketConfig memory config) external;
     function setDataStore(MarketConfig memory config, address dataStore) external;
     function setLltv(MarketConfig memory config, uint256 lltv) external;
     function setOracle(MarketConfig memory config, address oracle) external;

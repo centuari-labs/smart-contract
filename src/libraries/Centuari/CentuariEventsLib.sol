@@ -4,6 +4,8 @@ pragma solidity ^0.8.24;
 import {Id} from "../../types/CommonTypes.sol";
 
 library CentuariEventsLib {
+    event CreateDataStore(address indexed dataStore, address loanToken, address collateralToken, uint256 maturity);
+    event SetDataStore(address indexed newDataStore, address loanToken, address collateralToken, uint256 maturity);
     event FlashLoan(address indexed caller, address indexed token, uint256 amount);
     event LltvUpdated(Id indexed id, uint256 lltv);
     event OracleUpdated(Id indexed id, address oracle);

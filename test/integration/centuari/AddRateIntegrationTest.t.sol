@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {BaseTest} from "../../BaseTest.sol";
 import {MarketConfig, Id} from "../../../src/types/CommonTypes.sol";
 import {MarketConfigLib} from "../../../src/libraries/MarketConfigLib.sol";
+import {Centuari} from "../../../src/core/Centuari.sol";
 import {ICentuari} from "../../../src/interfaces/ICentuari.sol";
 import {DataStore} from "../../../src/core/DataStore.sol";
 import {CentuariDSLib} from "../../../src/libraries/Centuari/CentuariDSLib.sol";
@@ -20,7 +21,10 @@ contract AddRateIntegrationTest is BaseTest {
         vm.startPrank(address(lendingCLOB));
 
         //Create data store
-        address dataStore = ICentuari(centuari).createDataStore(usdcWethMarketConfig);
+        ICentuari(centuari).createDataStore(usdcWethMarketConfig);
+
+        //Get data store
+        address dataStore = Centuari(centuari).dataStores(usdcWethMarketConfig.id());
         
         // Expect Rate Added event
         vm.expectEmit(true, false, false, false);

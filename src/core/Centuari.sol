@@ -66,7 +66,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         lendingCLOB = lendingCLOB_;
     }
 
-    function createDataStore(MarketConfig memory config) external onlyLendingCLOB returns (address) {
+    function createDataStore(MarketConfig memory config) external onlyLendingCLOB {
         // Validate market config
         if (
             config.loanToken == address(0) || config.collateralToken == address(0) || config.maturity <= block.timestamp
@@ -82,7 +82,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         dataStore.setUint(CentuariDSLib.MATURITY_UINT256, config.maturity);
         dataStore.setBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL, true);
 
-        return address(dataStore);
+        emit CentuariEventsLib.CreateDataStore(address(dataStore), config.loanToken, config.collateralToken, config.maturity);
     }
 
     function setDataStore(MarketConfig memory config, address dataStore) external onlyOwner {
@@ -91,7 +91,9 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
             config.loanToken == address(0) || config.collateralToken == address(0) || config.maturity <= block.timestamp
         ) revert CentuariErrorsLib.InvalidMarketConfig();
 
-        dataStores[config.id()] = address(dataStore);
+        dataStores[config.id()] = dataStore;
+
+        emit CentuariEventsLib.SetDataStore(dataStore, config.loanToken, config.collateralToken, config.maturity);
     }
 
     function setLltv(MarketConfig memory config, uint256 lltv_) external onlyOwner onlyActiveMarket(config.id()) {
