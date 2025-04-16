@@ -96,6 +96,10 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         emit CentuariEventsLib.SetDataStore(dataStore, config.loanToken, config.collateralToken, config.maturity);
     }
 
+    function getDataStore(MarketConfig memory config) external view returns (address) {
+        return dataStores[config.id()];
+    }
+
     function setLltv(MarketConfig memory config, uint256 lltv_) external onlyOwner onlyActiveMarket(config.id()) {
         if (lltv_ == 0 || lltv_ > 100e16) revert CentuariErrorsLib.InvalidLltv();
         DataStore(dataStores[config.id()]).setUint(CentuariDSLib.LLTV_UINT256, lltv_);

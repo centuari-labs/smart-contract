@@ -6,6 +6,7 @@ import {MarketConfig} from "../types/CommonTypes.sol";
 interface ICentuari {
     function createDataStore(MarketConfig memory config) external;
     function setDataStore(MarketConfig memory config, address dataStore) external;
+    function getDataStore(MarketConfig memory config) external view returns (address);
     function setLltv(MarketConfig memory config, uint256 lltv) external;
     function setOracle(MarketConfig memory config, address oracle) external;
     function accrueInterest(MarketConfig memory config, uint256 rate) external;
