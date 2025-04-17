@@ -13,5 +13,4 @@ library CentuariPrimeDSLib {
     bytes32 public constant LAST_ACCRUE_UINT256 = keccak256("LAST_ACCRUE");
     bytes32 public constant CENTUARI_PRIME_TOKEN_ADDRESS = keccak256("CENTUARI_PRIME_TOKEN");
     bytes32 public constant IS_ACTIVE_BOOL = keccak256("IS_ACTIVE");
-
 }

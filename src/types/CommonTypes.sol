@@ -10,10 +10,15 @@ struct MarketConfig {
     uint256 maturity;
 }
 
-struct VaultMarketConfig{
+struct VaultMarketSupplyConfig{
     MarketConfig marketConfig;
     uint256 rate;
     uint256 cap;
+}
+
+struct VaultMarketWithdrawConfig{
+    MarketConfig marketConfig;
+    uint256 rate;
 }
 
 struct VaultConfig{

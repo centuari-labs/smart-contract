@@ -8,6 +8,7 @@ import {MockOracle} from "../src/mocks/MockOracle.sol";
 import {Centuari} from "../src/core/Centuari.sol";
 import {LendingCLOB} from "../src/core/LendingCLOB.sol";
 import {MarketConfig} from "../src/types/CommonTypes.sol";
+import {CentuariPrime} from "../src/core/CentuariPrime.sol";
 
 /// @title Centuari Base Test
 /// @notice Provides shared setup for unit tests across the protocol
@@ -33,6 +34,9 @@ contract BaseTest is Test {
 
     /// --- LendingCLOB ---
     LendingCLOB internal lendingCLOB;
+
+    /// --- CentuariPrime ---
+    CentuariPrime internal centuariPrime;
 
     /// --- Shared Constants ---
     uint256 internal constant RATE = 45e16;
@@ -82,5 +86,8 @@ contract BaseTest is Test {
 
         //Set LendingCLOB address for Centuari
         centuari.setLendingCLOB(address(lendingCLOB));
+
+        //Deploy CentuariPrime
+        centuariPrime = new CentuariPrime(address(this), address(lendingCLOB), address(centuari));
     }
 }
