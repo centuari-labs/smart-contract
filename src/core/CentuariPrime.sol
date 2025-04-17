@@ -20,20 +20,8 @@ import {VaultConfigLib} from "../libraries/VaultConfigLib.sol";
 import {CentuariPrimeDSLib} from "../libraries/centuari-prime/CentuariPrimeDSLib.sol";
 import {CentuariPrimeErrorsLib} from "../libraries/centuari-prime/CentuariPrimeErrorsLib.sol";
 import {CentuariPrimeEventsLib} from "../libraries/centuari-prime/CentuariPrimeEventsLib.sol";
+import {CentuariPrimeToken} from "./CentuariPrimeToken.sol";
 import {CentuariDSLib} from "../libraries/centuari/CentuariDSLib.sol";
-
-// struct VaultConfig{
-//     address curator;
-//     string name;
-//     address token;
-//     MarketConfig[] supplyQueue;
-//     MarketConfig[] withdrawQueue;
-//     uint256 totalShares;
-//     uint256 totalAssets;
-//     uint256 lastAccrue;
-//     address centuariPrimeToken;
-//     bool isActive;
-// }
 
 contract CentuariPrime is Ownable, ReentrancyGuard {
     using VaultConfigLib for VaultConfig;
@@ -69,7 +57,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         vault.setString(CentuariPrimeDSLib.NAME_STRING, config.name);
         vault.setBool(CentuariPrimeDSLib.IS_ACTIVE_BOOL, true);
 
-        emit CentuariPrimeEventsLib.CreateVault(address(vault), config.curator, config.token, config.name);
+        emit CentuariPrimeEventsLib.CreateVault(msg.sender, address(vault), config.token, config.name);
     }
 
     function deposit(VaultConfig memory config, uint256 amount) external nonReentrant {
@@ -78,117 +66,126 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         // Get the vault's data store
         DataStore vault = DataStore(vaults[config.id()]);
         
-        // Get the token address from the vault
+        // For existing vaults with positions, accrue interest first
+        if (vault.getUint(CentuariPrimeDSLib.TOTAL_SHARES_UINT256) > 0) {
+            _accrueInterest(vault);
+        }
+        
+        // Calculate shares to mint
+        uint256 shares = _calculateSharesToMint(vault, amount);
+        
+        // Get or create the vault token
+        address tokenAddress = vault.getAddress(CentuariPrimeDSLib.CENTUARI_PRIME_TOKEN_ADDRESS);
+        if (tokenAddress == address(0)) {
+            // First deposit - create the token
+            string memory name = vault.getString(CentuariPrimeDSLib.NAME_STRING);
+            CentuariPrimeToken centuariPrimeToken = new CentuariPrimeToken(vault.getAddress(CentuariPrimeDSLib.CURATOR_ADDRESS), name);
+            vault.setAddress(CentuariPrimeDSLib.CENTUARI_PRIME_TOKEN_ADDRESS, address(centuariPrimeToken));
+            tokenAddress = address(centuariPrimeToken);
+        }
+        
+        // Mint shares to the user
+        CentuariPrimeToken(tokenAddress).mint(msg.sender, shares);
+        
+        // Update total shares
+        uint256 totalShares = vault.getUint(CentuariPrimeDSLib.TOTAL_SHARES_UINT256);
+        vault.setUint(CentuariPrimeDSLib.TOTAL_SHARES_UINT256, totalShares + shares);
+
+        // Update total assets
+        uint256 totalAssets = vault.getUint(CentuariPrimeDSLib.TOTAL_ASSETS_UINT256);
+        vault.setUint(CentuariPrimeDSLib.TOTAL_ASSETS_UINT256, totalAssets + amount);
+        
+        // Transfer tokens from user to Centuari
         address vaultToken = vault.getAddress(CentuariPrimeDSLib.TOKEN_ADDRESS);
-        
-        // // Accrue interest before making any changes
-        // _accrueInterest(vault);
-        
-        // // Calculate shares to mint
-        // uint256 shares = _calculateSharesToMint(vault, amount);
-        
-        // // Update user's share balance
-        // uint256 userShares = vault.getUint(CentuariPrimeDSLib.getUserSharesKey(msg.sender));
-        // vault.setUint(CentuariPrimeDSLib.getUserSharesKey(msg.sender), userShares + shares);
-        
-        // // Update total shares and assets
-        // uint256 totalShares = vault.getUint(CentuariPrimeDSLib.TOTAL_SHARES_UINT256);
-        // uint256 totalAssets = vault.getUint(CentuariPrimeDSLib.TOTAL_ASSETS_UINT256);
-        // vault.setUint(CentuariPrimeDSLib.TOTAL_SHARES_UINT256, totalShares + shares);
-        // vault.setUint(CentuariPrimeDSLib.TOTAL_ASSETS_UINT256, totalAssets + amount);
-        
-        // Transfer tokens from user to Centuari (for lending)
         IERC20(vaultToken).safeTransferFrom(msg.sender, centuari, amount);
+        
+        // Supply to markets according to the supply queue
+        _supplyToMarkets(vault, amount);
         
         // Emit deposit event
         emit CentuariPrimeEventsLib.Deposit(address(vault), msg.sender, amount);
     }
     
-    // /**
-    //  * @notice Calculates shares to mint based on the amount being deposited
-    //  * @param vault The vault data store
-    //  * @param amount The amount being deposited
-    //  * @return shares The number of shares to mint
-    //  */
-    // function _calculateSharesToMint(DataStore vault, uint256 amount) internal view returns (uint256 shares) {
-    //     uint256 totalShares = vault.getUint(CentuariPrimeDSLib.TOTAL_SHARES_UINT256);
-    //     uint256 totalAssets = vault.getUint(CentuariPrimeDSLib.TOTAL_ASSETS_UINT256);
+    /**
+     * @notice Calculates shares to mint based on the amount being deposited
+     * @param vault The vault data store
+     * @param amount The amount being deposited
+     * @return shares The number of shares to mint
+     */
+    function _calculateSharesToMint(DataStore vault, uint256 amount) internal view returns (uint256 shares) {
+        uint256 totalShares = vault.getUint(CentuariPrimeDSLib.TOTAL_SHARES_UINT256);
+        uint256 totalAssets = vault.getUint(CentuariPrimeDSLib.TOTAL_ASSETS_UINT256);
         
-    //     // If there are no shares yet, mint 1:1, otherwise calculate based on the ratio
-    //     if (totalShares == 0) {
-    //         shares = amount;
-    //     } else {
-    //         shares = (amount * totalShares) / totalAssets;
-    //     }
-    // }
+        if (totalShares == 0) {
+            shares = amount;
+        } else {
+            shares = (amount * totalShares) / totalAssets;
+        }
+    }
     
-    // /**
-    //  * @notice Accrues interest for the vault based on vault's performance
-    //  * @param vault The vault data store
-    //  */
-    // function _accrueInterest(DataStore vault) internal {
-    //     // Calculate interest based on market performance
-    //     uint256 newTotalAssets = _calculateVaultAssets(vault);
-    //     vault.setUint(CentuariPrimeDSLib.TOTAL_ASSETS_UINT256, newTotalAssets);
-    // }
+    /**
+     * @notice Calculates the current total assets in the vault by querying market positions
+     * @param vault The vault data store
+     */
+    function _accrueInterest(DataStore vault) internal {
+        // Start with the base assets
+        uint256 totalAssets = vault.getUint(CentuariPrimeDSLib.TOTAL_ASSETS_UINT256);
+        
+        // Get the supply queue (markets where funds are supplied)
+        bytes memory supplyQueueBytes = vault.getBytes(CentuariPrimeDSLib.SUPPLY_QUEUE_BYTES);
+        VaultMarketConfig[] memory supplyQueue = abi.decode(supplyQueueBytes, (VaultMarketConfig[]));
+        
+        // Calculate the total value across all markets
+        for (uint256 i = 0; i < supplyQueue.length; i++) {
+            MarketConfig memory marketConfig = supplyQueue[i].marketConfig;
+            
+            // Get market data store
+            address marketDataStore = ICentuari(centuari).getDataStore(marketConfig);
+            
+            // Get bond token for this rate
+            address bondToken = DataStore(marketDataStore).getAddress(CentuariDSLib.getBondTokenAddressKey(supplyQueue[i].rate));
+            
+            // Get vault's bond token balance
+            address curator = DataStore(vault).getAddress(CentuariPrimeDSLib.CURATOR_ADDRESS);
+            uint256 bondBalance = IERC20(bondToken).balanceOf(curator);
+            if (bondBalance == 0) continue;
+            
+            // Calculate value of these bonds
+            ICentuari(centuari).accrueInterest(marketConfig, supplyQueue[i].rate);
+            uint256 totalMarketSupplyShares = DataStore(marketDataStore).getUint(CentuariDSLib.getTotalSuppySharesKey(supplyQueue[i].rate));
+            uint256 totalMarketSupplyAssets = DataStore(marketDataStore).getUint(CentuariDSLib.getTotalSuppyAssetsKey(supplyQueue[i].rate));
+            
+            if (totalMarketSupplyShares > 0) {
+                uint256 marketValue = (bondBalance * totalMarketSupplyAssets) / totalMarketSupplyShares;
+                totalAssets += marketValue;
+            }
+        }
+        
+        vault.setUint(CentuariPrimeDSLib.TOTAL_ASSETS_UINT256, totalAssets);
+    }
+
+    function _supplyToMarkets(DataStore vault, uint256 amount) internal {
+        bytes memory supplyQueueBytes = vault.getBytes(CentuariPrimeDSLib.SUPPLY_QUEUE_BYTES);
+        VaultMarketConfig[] memory supplyQueue = abi.decode(supplyQueueBytes, (VaultMarketConfig[]));
+        
+        for (uint256 i = 0; i < supplyQueue.length; i++) {
+            uint256 supplyAmount = amount;
+            MarketConfig memory marketConfig = supplyQueue[i].marketConfig;
+            uint256 rate = supplyQueue[i].rate;
+            
+            uint256 cap = supplyQueue[i].cap;
+            if(cap == 0) continue;
+
+            if(cap < amount) {
+                supplyAmount = cap;
+                amount -= cap;
+            }
+
+            //@todo place order to CLOB
+        }
+    }
     
-    // /**
-    //  * @notice Calculates the current total assets in the vault by querying market positions
-    //  * @param vault The vault data store
-    //  * @return totalAssets The current total assets value
-    //  */
-    // function _calculateVaultAssets(DataStore vault) internal view returns (uint256 totalAssets) {
-    //     address vaultToken = vault.getAddress(CentuariPrimeDSLib.TOKEN_ADDRESS);
-        
-    //     // Start with the base assets
-    //     totalAssets = vault.getUint(CentuariPrimeDSLib.TOTAL_ASSETS_UINT256);
-        
-    //     // Get the supply queue (markets where funds are supplied)
-    //     bytes memory supplyQueueBytes = vault.getBytes(CentuariPrimeDSLib.SUPPLY_QUEUE);
-    //     MarketConfig[] memory supplyQueue = abi.decode(supplyQueueBytes, (MarketConfig[]));
-        
-    //     // Calculate the total value across all markets
-    //     for (uint256 i = 0; i < supplyQueue.length; i++) {
-    //         MarketConfig memory market = supplyQueue[i];
-            
-    //         // Skip if market doesn't match our token
-    //         if (market.loanToken != vaultToken) continue;
-            
-    //         // Get market data store
-    //         address marketDataStore = ICentuari(centuari).dataStores(market.id());
-    //         if (marketDataStore == address(0)) continue;
-            
-    //         DataStore marketDS = DataStore(marketDataStore);
-            
-    //         // For each active rate in this market
-    //         bytes memory activeRatesBytes = marketDS.getBytes(CentuariDSLib.ACTIVE_RATES_BYTES);
-    //         uint256[] memory activeRates = abi.decode(activeRatesBytes, (uint256[]));
-            
-    //         for (uint256 j = 0; j < activeRates.length; j++) {
-    //             uint256 rate = activeRates[j];
-                
-    //             // Get bond token for this rate
-    //             address bondToken = marketDS.getAddress(CentuariDSLib.getBondTokenAddressKey(rate));
-    //             if (bondToken == address(0)) continue;
-                
-    //             // Get vault's bond token balance
-    //             uint256 bondBalance = IERC20(bondToken).balanceOf(address(vault));
-    //             if (bondBalance == 0) continue;
-                
-    //             // Calculate value of these bonds
-    //             uint256 totalBondShares = marketDS.getUint(CentuariDSLib.getTotalSuppySharesKey(rate));
-    //             uint256 totalBondAssets = marketDS.getUint(CentuariDSLib.getTotalSuppyAssetsKey(rate));
-                
-    //             if (totalBondShares > 0) {
-    //                 uint256 marketValue = (bondBalance * totalBondAssets) / totalBondShares;
-    //                 totalAssets += marketValue;
-    //             }
-    //         }
-    //     }
-        
-    //     return totalAssets;
-    // }
-    
+    //@todo withdraw
     // /**
     //  * @notice Allows users to withdraw their funds plus accrued interest
     //  * @param config The vault configuration
@@ -239,7 +236,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         if(vault.getAddress(CentuariPrimeDSLib.CURATOR_ADDRESS) != msg.sender) {revert CentuariPrimeErrorsLib.OnlyCurator();}
         
         // Check if the vault still has tokens in markets that are being removed
-        bytes memory previousMarketBytes = vault.getBytes(CentuariPrimeDSLib.getSupplyQueueKey());
+        bytes memory previousMarketBytes = vault.getBytes(CentuariPrimeDSLib.SUPPLY_QUEUE_BYTES);
         VaultMarketConfig[] memory previousMarkets = abi.decode(previousMarketBytes, (VaultMarketConfig[]));
         
         // For each previous market, check if it exists in the new supply queue
@@ -260,7 +257,12 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
                 DataStore centuariDataStore = DataStore(ICentuari(centuari).getDataStore(previousMarkets[i].marketConfig));
                 address bondToken = centuariDataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(previousMarkets[i].rate));
                 if(bondToken != address(0) && IERC20(bondToken).balanceOf(address(vault)) > 0) {
-                    revert CentuariPrimeErrorsLib.InsufficientShares();
+                    revert CentuariPrimeErrorsLib.RemoveMarketNotAllowed(
+                        previousMarkets[i].marketConfig.loanToken, 
+                        previousMarkets[i].marketConfig.collateralToken, 
+                        previousMarkets[i].marketConfig.maturity, 
+                        previousMarkets[i].rate
+                    );
                 }
             }
         }
@@ -272,11 +274,23 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
                 || centuariDataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(supplyQueue[i].rate)) == address(0)
                 || centuariDataStore.getUint(CentuariDSLib.MATURITY_UINT256) <= block.timestamp
             ) {
-                revert CentuariPrimeErrorsLib.MarketNotActive();
+                revert CentuariPrimeErrorsLib.MarketNotActive(
+                    supplyQueue[i].marketConfig.loanToken, 
+                    supplyQueue[i].marketConfig.collateralToken, 
+                    supplyQueue[i].marketConfig.maturity, 
+                    supplyQueue[i].rate
+                );
             }
+
+            if(supplyQueue[i].cap == 0) { revert CentuariPrimeErrorsLib.InvalidCap();}
+
+            //@todo check duplicate market
         }
 
         // Set the supply queue
-        vault.setBytes(CentuariPrimeDSLib.getSupplyQueueKey(), abi.encode(supplyQueue));
+        vault.setBytes(CentuariPrimeDSLib.SUPPLY_QUEUE_BYTES, abi.encode(supplyQueue));
+        emit CentuariPrimeEventsLib.SetSupplyQueue(msg.sender, address(vault), supplyQueue);
     }
+
+    //@todo set withdraw queue
 }

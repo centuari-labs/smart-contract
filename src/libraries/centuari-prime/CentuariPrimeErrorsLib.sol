@@ -5,8 +5,9 @@ library CentuariPrimeErrorsLib {
     error InvalidVaultConfig();
     error VaultAlreadyExists();
     error VaultDoesNotExist();
-    error InsufficientShares();
+    error RemoveMarketNotAllowed(address loanToken, address collateralToken, uint256 maturity, uint256 rate);
     error InvalidAmount();
     error OnlyCurator();
-    error MarketNotActive();
+    error MarketNotActive(address loanToken, address collateralToken, uint256 maturity, uint256 rate);
+    error InvalidCap();
 }

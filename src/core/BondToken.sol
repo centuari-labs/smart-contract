@@ -52,7 +52,7 @@ contract BondToken is Ownable, ERC20 {
         ERC20(
             string(
                 abi.encodePacked(
-                    "POC ",
+                    "CTI ",
                     IERC20Metadata(config_.loanToken).symbol(),
                     "/",
                     IERC20Metadata(config_.collateralToken).symbol(),
