@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.26;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -11,23 +11,40 @@ contract MockToken is Ownable, ERC20 {
     /// @notice Token decimals storage
     uint8 private _decimals;
 
+    /// @notice Mapping of addresses that can mint tokens
+    mapping(address => bool) public minters;
+
+    /// @notice Event emitted when a minter is added or removed
+    event MinterUpdated(address indexed account, bool isMinter);
+
     /// @notice Constructs a new MockToken instance
     /// @dev Sets up the token with a name, symbol, and decimal places
     /// @param name_ The name of the token
     /// @param symbol_ The symbol of the token
     /// @param decimals_ The number of decimal places for token amounts
-    constructor(string memory name_, string memory symbol_, uint8 decimals_)
-        Ownable(msg.sender)
-        ERC20(name_, symbol_)
-    {
+    constructor(
+        string memory name_,
+        string memory symbol_,
+        uint8 decimals_
+    ) Ownable(msg.sender) ERC20(name_, symbol_) {
         _decimals = decimals_;
     }
 
-    /// @notice Mints new tokens to a specified account
+    /// @notice Adds or removes an address as a minter
     /// @dev Only callable by the contract owner
+    /// @param account_ The address to update
+    /// @param isMinter_ Whether the address should be a minter
+    function setMinter(address account_, bool isMinter_) external onlyOwner {
+        minters[account_] = isMinter_;
+        emit MinterUpdated(account_, isMinter_);
+    }
+
+    /// @notice Mints new tokens to a specified account
+    /// @dev Only callable by the contract owner or minters
     /// @param account_ The address to receive the minted tokens
     /// @param amount_ The amount of tokens to mint
-    function mint(address account_, uint256 amount_) external onlyOwner {
+    function mint(address account_, uint256 amount_) external {
+        require(msg.sender == owner() || minters[msg.sender], "Only the owner or minter can mint tokens");
         _mint(account_, amount_);
     }
 
