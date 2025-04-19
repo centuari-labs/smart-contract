@@ -17,18 +17,23 @@ library CentuariCLOBDSLib {
     function getOrderTraderKey(uint256 orderId) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(orderId, ORDER_TRADER_ADDRESS));
     }
+
     function getOrderAmountKey(uint256 orderId) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(orderId, ORDER_AMOUNT_UINT256));
     }
+
     function getOrderCollateralAmountKey(uint256 orderId) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(orderId, ORDER_COLLATERAL_AMOUNT_UINT256));
     }
+
     function getOrderRateKey(uint256 orderId) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(orderId, ORDER_RATE_UINT256));
     }
+
     function getOrderSideKey(uint256 orderId) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(orderId, ORDER_SIDE_UINT256));
     }
+
     function getOrderStatusKey(uint256 orderId) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(orderId, ORDER_STATUS_UINT256));
     }

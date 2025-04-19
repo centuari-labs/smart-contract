@@ -66,18 +66,15 @@ contract BaseTest is Test {
             maturity: MATURITY,
             maturityMonth: MATURITY_MONTH,
             maturityYear: MATURITY_YEAR,
-            decimals:usdc.decimals()
+            decimals: usdc.decimals()
         });
 
         bondToken = new BondToken(address(this), config);
 
         //Deploy Centuari
         centuari = new Centuari(address(this));
-        usdcWethMarketConfig = MarketConfig({
-            loanToken: address(usdc),
-            collateralToken: address(weth),
-            maturity: MATURITY
-        });
+        usdcWethMarketConfig =
+            MarketConfig({loanToken: address(usdc), collateralToken: address(weth), maturity: MATURITY});
         vm.prank(address(centuariCLOB));
         centuari.createDataStore(usdcWethMarketConfig);
 

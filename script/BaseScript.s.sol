@@ -8,7 +8,7 @@ abstract contract BaseScript is Script {
     address deployer;
     uint256 deployerPrivateKey;
     string rpcUrl;
-    
+
     // Setup method to run before each deployment
     function setUp() public virtual {
         // Load private key from environment
@@ -18,26 +18,26 @@ abstract contract BaseScript is Script {
         //RPC URL
         rpcUrl = vm.envString("RPC_URL");
         vm.createSelectFork(rpcUrl);
-        
+
         // Log deployment info
         console2.log("Deploying from:", deployer);
     }
-    
+
     // This is the function that child contracts will override to implement deployment logic
     function _deployImplementation() internal virtual;
-    
+
     // Common deployment logic using the template method pattern
     function _deploy() internal {
         // Pre-deployment setup
         vm.startBroadcast(deployerPrivateKey);
-        
+
         // Call the child's implementation
         _deployImplementation();
-        
+
         // Post-deployment cleanup
         vm.stopBroadcast();
     }
-    
+
     // Main entry point that child scripts will inherit
     function run() public virtual {
         setUp();

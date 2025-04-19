@@ -26,7 +26,7 @@ contract DataStore is AccessControl {
     // store for string values
     mapping(bytes32 => string) public stringValues;
 
-    function setController(address controller_) external onlyRole(DEFAULT_ADMIN_ROLE){
+    function setController(address controller_) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(CONTROLLER_ROLE, controller_);
         _revokeRole(CONTROLLER_ROLE, controller);
     }

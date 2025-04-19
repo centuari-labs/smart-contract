@@ -23,10 +23,10 @@ contract FaucetMockToken {
     uint256[6] private amounts = [
         uint256(1_000_000), // USDC
         uint256(1_000_000), // WETH
-        uint256(10_000),    // WBTC
+        uint256(10_000), // WBTC
         uint256(1_000_000), // SOL
         uint256(1_000_000), // LINK
-        uint256(1_000_000)  // AAVE
+        uint256(1_000_000) // AAVE
     ];
 
     event TokensRequested(address indexed recipient);
@@ -34,7 +34,7 @@ contract FaucetMockToken {
     constructor(MockToken[6] memory _tokens) {
         tokens = _tokens;
     }
-    
+
     function requestTokens(TokenType[] memory _requestToken, address _recipient) external {
         uint256 timeSinceLastRequest = block.timestamp - lastRequestTime[_recipient];
         if (timeSinceLastRequest < COOLDOWN) {
@@ -42,10 +42,10 @@ contract FaucetMockToken {
         }
 
         lastRequestTime[_recipient] = block.timestamp;
-        for(uint i = 0; i < _requestToken.length; i++) {
+        for (uint256 i = 0; i < _requestToken.length; i++) {
             tokens[uint256(_requestToken[i])].mint(_recipient, amounts[uint256(_requestToken[i])]);
         }
-        
+
         emit TokensRequested(_recipient);
     }
 }

@@ -40,10 +40,7 @@ contract DeployCentuariCore is BaseScript {
         uint40[5] memory prices = [2500e6, 90000e6, 200e6, 15e6, 200e6];
 
         for (uint256 i = 0; i < collaterals.length; i++) {
-            oracles[i] = new MockOracle(
-                address(collaterals[i]),
-                address(musdc)
-            );
+            oracles[i] = new MockOracle(address(collaterals[i]), address(musdc));
             oracles[i].setPrice(prices[i]);
             console2.log(
                 "MockOracle for %s with price %s deployed at: %s",
@@ -55,11 +52,21 @@ contract DeployCentuariCore is BaseScript {
 
         string memory deployedOracles = string.concat(
             "\n# Deployed Mock Oracles\n",
-            "WETH=", vm.toString(address(oracles[0])), "\n",
-            "WBTC=", vm.toString(address(oracles[1])), "\n",
-            "WSOL=", vm.toString(address(oracles[2])), "\n",
-            "WLINK=", vm.toString(address(oracles[3])), "\n",
-            "WAAVE=", vm.toString(address(oracles[4])), "\n"
+            "WETH=",
+            vm.toString(address(oracles[0])),
+            "\n",
+            "WBTC=",
+            vm.toString(address(oracles[1])),
+            "\n",
+            "WSOL=",
+            vm.toString(address(oracles[2])),
+            "\n",
+            "WLINK=",
+            vm.toString(address(oracles[3])),
+            "\n",
+            "WAAVE=",
+            vm.toString(address(oracles[4])),
+            "\n"
         );
         vm.writeFile(".env", string.concat(vm.readFile(".env"), deployedOracles));
 
@@ -69,9 +76,15 @@ contract DeployCentuariCore is BaseScript {
 
         string memory deployedCentuariCore = string.concat(
             "\n# Deployed Centuari Core contract addresses\n",
-            "CENTUARI=", vm.toString(address(centuari)), "\n",
-            "LENDING_CLOB=", vm.toString(address(centuariCLOB)), "\n",
-            "CENTUARI_PRIME=", vm.toString(address(centuariPrime)), "\n"
+            "CENTUARI=",
+            vm.toString(address(centuari)),
+            "\n",
+            "LENDING_CLOB=",
+            vm.toString(address(centuariCLOB)),
+            "\n",
+            "CENTUARI_PRIME=",
+            vm.toString(address(centuariPrime)),
+            "\n"
         );
         vm.writeFile(".env", string.concat(vm.readFile(".env"), deployedCentuariCore));
     }

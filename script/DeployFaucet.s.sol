@@ -16,13 +16,15 @@ contract DeployFaucet is BaseScript {
             MockToken(vm.envAddress("WLINK")),
             MockToken(vm.envAddress("WAAVE"))
         ];
-        
+
         FaucetMockToken faucetMockToken = new FaucetMockToken(mockTokens);
         console2.log("Faucet deployed at: %s", address(faucetMockToken));
 
         string memory deployedFaucet = string.concat(
             "\n# Deployed Faucet Mock Token contract addresses\n",
-            "FAUCET=", vm.toString(address(faucetMockToken)), "\n"
+            "FAUCET=",
+            vm.toString(address(faucetMockToken)),
+            "\n"
         );
 
         vm.writeFile(".env", string.concat(vm.readFile(".env"), deployedFaucet));

@@ -82,7 +82,9 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         dataStore.setUint(CentuariDSLib.MATURITY_UINT256, config.maturity);
         dataStore.setBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL, true);
 
-        emit CentuariEventsLib.CreateDataStore(address(dataStore), config.loanToken, config.collateralToken, config.maturity);
+        emit CentuariEventsLib.CreateDataStore(
+            address(dataStore), config.loanToken, config.collateralToken, config.maturity
+        );
     }
 
     function setDataStore(MarketConfig memory config, address dataStore) external onlyOwner {
@@ -116,7 +118,8 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         DataStore dataStore = DataStore(dataStores[id]);
 
         uint256 collateralPrice = IMockOracle(dataStore.getAddress(CentuariDSLib.ORACLE_ADDRESS)).price();
-        uint256 collateralDecimals = 10 ** IERC20Metadata(dataStore.getAddress(CentuariDSLib.COLLATERAL_TOKEN_ADDRESS)).decimals();
+        uint256 collateralDecimals =
+            10 ** IERC20Metadata(dataStore.getAddress(CentuariDSLib.COLLATERAL_TOKEN_ADDRESS)).decimals();
 
         uint256 borrowedValue = (
             dataStore.getUint(CentuariDSLib.getUserBorrowSharesKey(rate, user))
@@ -146,8 +149,8 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         uint256 timePassed;
         uint256 maxLastTimestamp;
         if (block.timestamp > dataStore.getUint(CentuariDSLib.MATURITY_UINT256)) {
-            timePassed =
-                dataStore.getUint(CentuariDSLib.MATURITY_UINT256) - dataStore.getUint(CentuariDSLib.getLastAccrueKey(rate));
+            timePassed = dataStore.getUint(CentuariDSLib.MATURITY_UINT256)
+                - dataStore.getUint(CentuariDSLib.getLastAccrueKey(rate));
             maxLastTimestamp = dataStore.getUint(CentuariDSLib.MATURITY_UINT256);
         } else {
             timePassed = block.timestamp - dataStore.getUint(CentuariDSLib.getLastAccrueKey(rate));
@@ -167,7 +170,11 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         dataStore.setUint(CentuariDSLib.getLastAccrueKey(rate), maxLastTimestamp);
     }
 
-    function addRate(MarketConfig memory config, uint256 rate_) external onlyCentuariCLOB onlyActiveMarket(config.id()) {
+    function addRate(MarketConfig memory config, uint256 rate_)
+        external
+        onlyCentuariCLOB
+        onlyActiveMarket(config.id())
+    {
         DataStore dataStore = DataStore(dataStores[config.id()]);
         if (dataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(rate_)) != address(0)) {
             revert CentuariErrorsLib.RateAlreadyExists();
@@ -423,7 +430,11 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
     }
 
-    function transferFrom(MarketConfig memory config, address token, address from, address to, uint256 amount) external onlyCentuariCLOB nonReentrant {
+    function transferFrom(MarketConfig memory config, address token, address from, address to, uint256 amount)
+        external
+        onlyCentuariCLOB
+        nonReentrant
+    {
         IERC20(token).safeTransferFrom(from, to, amount);
         emit CentuariEventsLib.TransferFrom(config.id(), token, from, to, amount);
     }
@@ -431,7 +442,6 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
     function liquidateUncollaterizeLoand() external {
         //@todo call slashing AVS
         //check if collateral is already in Centuari vault
-        //liquidate the user 
+        //liquidate the user
     }
-
 }

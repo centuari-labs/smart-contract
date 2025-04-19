@@ -13,20 +13,7 @@ contract CentuariPrimeToken is Ownable, ERC20 {
 
     constructor(address centuariPrime_, string memory name_)
         Ownable(centuariPrime_)
-        ERC20(
-            string(
-                abi.encodePacked(
-                    "CPT ",
-                    name_
-                )
-            ),
-            string(
-                abi.encodePacked(
-                    "CPT",
-                    name_
-                )
-            )
-        )
+        ERC20(string(abi.encodePacked("CPT ", name_)), string(abi.encodePacked("CPT", name_)))
     {}
 
     function mint(address to_, uint256 amount_) external onlyOwner {

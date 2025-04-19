@@ -10,18 +10,18 @@ struct MarketConfig {
     uint256 maturity;
 }
 
-struct VaultMarketSupplyConfig{
+struct VaultMarketSupplyConfig {
     MarketConfig marketConfig;
     uint256 rate;
     uint256 cap;
 }
 
-struct VaultMarketWithdrawConfig{
+struct VaultMarketWithdrawConfig {
     MarketConfig marketConfig;
     uint256 rate;
 }
 
-struct VaultConfig{
+struct VaultConfig {
     address curator;
     address token;
     string name;
@@ -55,4 +55,5 @@ enum Status {
     FILLED, // Order is completely matched
     CANCELLED, // Order was cancelled by the trader
     EXPIRED // Order has expired (reserved for future use)
+
 }

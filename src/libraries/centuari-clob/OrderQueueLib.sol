@@ -19,6 +19,7 @@ library OrderQueueLib {
     function getLinkedPrevKey(uint256 orderId) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(orderId, LINKED_PREV_UINT256));
     }
+
     function getLinkedNextKey(uint256 orderId) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(orderId, LINKED_NEXT_UINT256));
     }
@@ -27,6 +28,7 @@ library OrderQueueLib {
     function getLinkedHeadKey(uint256 rate, Side side) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(rate, side, LINKED_HEAD_UINT256));
     }
+
     function getLinkedTailKey(uint256 rate, Side side) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(rate, side, LINKED_TAIL_UINT256));
     }

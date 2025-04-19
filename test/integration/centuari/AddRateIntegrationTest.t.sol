@@ -25,16 +25,16 @@ contract AddRateIntegrationTest is BaseTest {
 
         //Get data store
         address dataStore = Centuari(centuari).dataStores(usdcWethMarketConfig.id());
-        
+
         // Expect Rate Added event
         vm.expectEmit(true, false, false, false);
         emit CentuariEventsLib.RateAdded(RATE);
-        
+
         // Expect Bond Token Created event
         // We don't know the exact address yet so we use address(0), so we only check the rate
         vm.expectEmit(false, false, false, true);
-        emit CentuariEventsLib.BondTokenCreated(address(0), RATE); 
-        
+        emit CentuariEventsLib.BondTokenCreated(address(0), RATE);
+
         // Change caller to Lending CLOB and add rate
         vm.warp(MOCK_TIMESTAMP);
         ICentuari(centuari).addRate(usdcWethMarketConfig, RATE);
@@ -42,14 +42,22 @@ contract AddRateIntegrationTest is BaseTest {
         //Get the last accrue timestamp
         uint256 lastAccrueTimestamp = DataStore(dataStore).getUint(CentuariDSLib.getLastAccrueKey(RATE));
         assertEq(lastAccrueTimestamp, MOCK_TIMESTAMP);
-        
+
         // Get the bond token address
         address bondTokenAddress = DataStore(dataStore).getAddress(CentuariDSLib.getBondTokenAddressKey(RATE));
         assertTrue(bondTokenAddress != address(0), "Bond token not created");
-        
+
         // Check bond token configuration
         BondToken addRateBondToken = BondToken(bondTokenAddress);
-        (address loanToken, address collateralToken, uint256 rate, uint256 maturity, string memory maturityMonth, uint256 maturityYear, uint256 decimals) = addRateBondToken.config();
+        (
+            address loanToken,
+            address collateralToken,
+            uint256 rate,
+            uint256 maturity,
+            string memory maturityMonth,
+            uint256 maturityYear,
+            uint256 decimals
+        ) = addRateBondToken.config();
         assertEq(loanToken, address(usdc), "Incorrect loan token");
         assertEq(collateralToken, address(weth), "Incorrect collateral token");
         assertEq(rate, RATE, "Incorrect rate");
