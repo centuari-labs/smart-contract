@@ -30,7 +30,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
 
     mapping(Id => address) public vaults;
 
-    address public lendingCLOB;
+    address public centuariCLOB;
     ICentuari public CENTUARI;
 
     modifier onlyActiveVault(Id id) {
@@ -44,13 +44,13 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         _;
     }
 
-    constructor(address owner_, address lendingCLOB_, address centuari_) Ownable(owner_) {
-        lendingCLOB = lendingCLOB_;
+    constructor(address owner_, address centuariCLOB_, address centuari_) Ownable(owner_) {
+        centuariCLOB = centuariCLOB_;
         CENTUARI = ICentuari(centuari_);
     }
 
-    function setLendingCLOB(address lendingCLOB_) external onlyOwner {
-        lendingCLOB = lendingCLOB_;
+    function setCentuariCLOB(address centuariCLOB_) external onlyOwner {
+        centuariCLOB = centuariCLOB_;
     }
 
     function setCentuari(address centuari_) external onlyOwner {
@@ -421,7 +421,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         emit CentuariPrimeEventsLib.SetWithdrawQueue(msg.sender, address(vault), withdrawQueue);
     }
 
-    function reallocate() external onlyActiveVault(config.id()) onlyVaultOwner(config.id()) {
+    function reallocate(VaultConfig memory config) external onlyActiveVault(config.id()) onlyVaultOwner(config.id()) {
         //@todo implement reallocate
     }
     

@@ -6,7 +6,7 @@ import {MockToken} from "../src/mocks/MockToken.sol";
 import {BondToken} from "../src/core/BondToken.sol";
 import {MockOracle} from "../src/mocks/MockOracle.sol";
 import {Centuari} from "../src/core/Centuari.sol";
-import {LendingCLOB} from "../src/core/LendingCLOB.sol";
+import {CentuariCLOB} from "../src/core/CentuariCLOB.sol";
 import {MarketConfig} from "../src/types/CommonTypes.sol";
 import {CentuariPrime} from "../src/core/CentuariPrime.sol";
 
@@ -32,8 +32,8 @@ contract BaseTest is Test {
     Centuari internal centuari;
     MarketConfig internal usdcWethMarketConfig;
 
-    /// --- LendingCLOB ---
-    LendingCLOB internal lendingCLOB;
+    /// --- CentuariCLOB ---
+    CentuariCLOB internal centuariCLOB;
 
     /// --- CentuariPrime ---
     CentuariPrime internal centuariPrime;
@@ -78,16 +78,16 @@ contract BaseTest is Test {
             collateralToken: address(weth),
             maturity: MATURITY
         });
-        vm.prank(address(lendingCLOB));
+        vm.prank(address(centuariCLOB));
         centuari.createDataStore(usdcWethMarketConfig);
 
-        //Deploy LendingCLOB
-        lendingCLOB = new LendingCLOB(address(this), address(centuari));
+        //Deploy CentuariCLOB
+        centuariCLOB = new CentuariCLOB(address(this), address(centuari));
 
-        //Set LendingCLOB address for Centuari
-        centuari.setLendingCLOB(address(lendingCLOB));
+        //Set CentuariCLOB address for Centuari
+        centuari.setCentuariCLOB(address(centuariCLOB));
 
         //Deploy CentuariPrime
-        centuariPrime = new CentuariPrime(address(this), address(lendingCLOB), address(centuari));
+        centuariPrime = new CentuariPrime(address(this), address(centuariCLOB), address(centuari));
     }
 }

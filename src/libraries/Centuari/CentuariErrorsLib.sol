@@ -13,7 +13,7 @@ library CentuariErrorsLib {
     error RateAlreadyExists();
     error InvalidRate();
     error InsufficientCollateral();
-    error OnlyLendingCLOB();
+    error OnlyCentuariCLOB();
     error InsufficientLiquidity();
     error LiquidationNotAllowed();
     error MarketNotMature();

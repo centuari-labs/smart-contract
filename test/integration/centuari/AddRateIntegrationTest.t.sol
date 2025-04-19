@@ -18,7 +18,7 @@ contract AddRateIntegrationTest is BaseTest {
     using MarketConfigLib for MarketConfig;
 
     function test_AddRate() public {
-        vm.startPrank(address(lendingCLOB));
+        vm.startPrank(address(centuariCLOB));
 
         //Create data store
         ICentuari(centuari).createDataStore(usdcWethMarketConfig);
