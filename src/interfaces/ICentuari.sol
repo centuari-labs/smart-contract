@@ -12,6 +12,7 @@ interface ICentuari {
     function accrueInterest(MarketConfig memory config, uint256 rate) external;
     function addRate(MarketConfig memory config, uint256 rate) external;
     function supply(MarketConfig memory config, uint256 rate, address user, uint256 amount) external;
+    function borrow(MarketConfig memory config, uint256 rate, address user, uint256 amount) external;
     function withdraw(MarketConfig memory config, uint256 rate, uint256 shares) external;
     function supplyCollateral(MarketConfig memory config, uint256 rate, address user, uint256 amount) external;
     function withdrawCollateral(MarketConfig memory config, uint256 rate, uint256 amount) external;
@@ -19,4 +20,5 @@ interface ICentuari {
     function liquidate(MarketConfig memory config, uint256 rate, address user) external;
     function getUserCollateral(MarketConfig memory config, uint256 rate, address user) external view returns (uint256);
     function getUserBorrowShares(MarketConfig memory config, uint256 rate, address user) external view returns (uint256);
+    function transferFrom(MarketConfig memory config, address token, address from, address to, uint256 amount) external;
 }

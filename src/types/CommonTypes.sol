@@ -28,13 +28,20 @@ struct VaultConfig{
 }
 
 struct Order {
-    Id id;
+    uint256 id;
     address trader;
     uint256 amount;
     uint256 collateralAmount;
     uint256 rate;
     Side side;
     Status status;
+}
+
+struct MatchedOrder {
+    uint256 id;
+    address trader;
+    uint256 amount;
+    uint256 collateralAmount;
 }
 
 enum Side {

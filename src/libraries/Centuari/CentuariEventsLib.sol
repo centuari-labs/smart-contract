@@ -20,4 +20,5 @@ library CentuariEventsLib {
     );
     event RateAdded(uint256 rate);
     event BondTokenCreated(address indexed bondToken, uint256 rate);
+    event TransferFrom(Id indexed id, address indexed token, address from, address to, uint256 amount);
 }

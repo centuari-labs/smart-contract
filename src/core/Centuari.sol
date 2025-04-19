@@ -423,6 +423,11 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
     }
 
+    function transferFrom(MarketConfig memory config, address token, address from, address to, uint256 amount) external onlyCentuariCLOB nonReentrant {
+        IERC20(token).safeTransferFrom(from, to, amount);
+        emit CentuariEventsLib.TransferFrom(config.id(), token, from, to, amount);
+    }
+
     function liquidateUncollaterizeLoand() external {
         //@todo call slashing AVS
         //check if collateral is already in Centuari vault
