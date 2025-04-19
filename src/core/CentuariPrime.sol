@@ -421,7 +421,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         emit CentuariPrimeEventsLib.SetWithdrawQueue(msg.sender, address(vault), withdrawQueue);
     }
 
-    function reallocate() external onlyActiveVault(config.id()) onlyVaultOwner(config.id()) {
+    function reallocate() external {
         //@todo implement reallocate
     }
     
