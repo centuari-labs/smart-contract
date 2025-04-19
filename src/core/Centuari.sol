@@ -32,7 +32,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     mapping(Id => address) public dataStores;
-    address public lendingCLOB;
+    address public centuariCLOB;
 
     modifier onlyActiveMarket(Id id) {
         DataStore dataStore = DataStore(dataStores[id]);
@@ -55,18 +55,18 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier onlyLendingCLOB() {
-        if (msg.sender != lendingCLOB) revert CentuariErrorsLib.OnlyLendingCLOB();
+    modifier onlyCentuariCLOB() {
+        if (msg.sender != centuariCLOB) revert CentuariErrorsLib.OnlyCentuariCLOB();
         _;
     }
 
     constructor(address owner_) Ownable(owner_) {}
 
-    function setLendingCLOB(address lendingCLOB_) external onlyOwner {
-        lendingCLOB = lendingCLOB_;
+    function setCentuariCLOB(address centuariCLOB_) external onlyOwner {
+        centuariCLOB = centuariCLOB_;
     }
 
-    function createDataStore(MarketConfig memory config) external onlyLendingCLOB {
+    function createDataStore(MarketConfig memory config) external onlyCentuariCLOB {
         // Validate market config
         if (
             config.loanToken == address(0) || config.collateralToken == address(0) || config.maturity <= block.timestamp
@@ -167,7 +167,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         dataStore.setUint(CentuariDSLib.getLastAccrueKey(rate), maxLastTimestamp);
     }
 
-    function addRate(MarketConfig memory config, uint256 rate_) external onlyLendingCLOB onlyActiveMarket(config.id()) {
+    function addRate(MarketConfig memory config, uint256 rate_) external onlyCentuariCLOB onlyActiveMarket(config.id()) {
         DataStore dataStore = DataStore(dataStores[config.id()]);
         if (dataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(rate_)) != address(0)) {
             revert CentuariErrorsLib.RateAlreadyExists();
@@ -196,7 +196,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
     function supply(MarketConfig memory config, uint256 rate, address user, uint256 amount)
         external
         nonReentrant
-        onlyLendingCLOB
+        onlyCentuariCLOB
         onlyActiveMarket(config.id())
         onlyActiveRate(config.id(), rate)
     {
@@ -227,7 +227,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
     function borrow(MarketConfig memory config, uint256 rate, address user, uint256 amount)
         external
         nonReentrant
-        onlyLendingCLOB
+        onlyCentuariCLOB
         onlyActiveMarket(config.id())
         onlyActiveRate(config.id(), rate)
     {
@@ -294,7 +294,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
     function supplyCollateral(MarketConfig memory config, uint256 rate, address user, uint256 amount)
         external
         nonReentrant
-        onlyLendingCLOB
+        onlyCentuariCLOB
         onlyActiveMarket(config.id())
         onlyActiveRate(config.id(), rate)
     {

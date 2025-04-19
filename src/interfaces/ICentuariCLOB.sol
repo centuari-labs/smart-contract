@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-/// @title ILendingCLOB - Interface for the LendingCLOB contract
-/// @notice Manages lending and borrowing orders with rate-time priority matching
+/// @title ICentuariCLOB - Interface for the CentuariCLOB contract
+/// @notice Manages centuariCLOB and borrowing orders with rate-time priority matching
 /// @dev Implements a two-sided order book where LEND and BORROW
-interface ILendingCLOB {
+interface ICentuariCLOB {
     /// @notice Represents the current state of an order
     /// @dev Used to track order lifecycle and matching status
     enum Status {

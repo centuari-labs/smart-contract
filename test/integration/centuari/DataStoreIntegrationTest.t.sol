@@ -17,7 +17,7 @@ contract DataStoreIntegrationTest is BaseTest {
 
     function test_CreateDataStore() public {
         //Change caller to Lending CLOB
-        vm.prank(address(lendingCLOB));
+        vm.prank(address(centuariCLOB));
 
         MarketConfig memory config = MarketConfig({
             loanToken: address(usdc),
@@ -40,7 +40,7 @@ contract DataStoreIntegrationTest is BaseTest {
 
     function test_SetDataStore() public {
         //Change caller to Lending CLOB
-        vm.startPrank(address(lendingCLOB));
+        vm.startPrank(address(centuariCLOB));
 
         //Create a DataStore
         MarketConfig memory config = MarketConfig({
@@ -82,7 +82,7 @@ contract DataStoreIntegrationTest is BaseTest {
 
     function test_CreateDataStore_RevertIf_InvalidMarketConfig() public {
         // Change caller to Lending CLOB
-        vm.startPrank(address(lendingCLOB));
+        vm.startPrank(address(centuariCLOB));
     
         // Use invalid market config with invalid loanToken
         MarketConfig memory configInvalidLoan = MarketConfig({
@@ -121,7 +121,7 @@ contract DataStoreIntegrationTest is BaseTest {
 
     function test_SetDataStore_RevertIf_InvalidMarketConfig() public {
         // Change caller to Lending CLOB
-        vm.prank(address(lendingCLOB));
+        vm.prank(address(centuariCLOB));
 
         //Create a DataStore
         MarketConfig memory config = MarketConfig({
@@ -174,7 +174,7 @@ contract DataStoreIntegrationTest is BaseTest {
         vm.stopPrank();
     }
 
-    function test_CreateDataStore_RevertIf_OnlyLendingCLOB() public{
+    function test_CreateDataStore_RevertIf_OnlyCentuariCLOB() public{
         //Create a DataStore
         MarketConfig memory config = MarketConfig({
             loanToken: address(usdc),
@@ -182,13 +182,13 @@ contract DataStoreIntegrationTest is BaseTest {
             maturity: block.timestamp + 100 days
         });
 
-        vm.expectRevert(abi.encodeWithSelector(CentuariErrorsLib.OnlyLendingCLOB.selector));
+        vm.expectRevert(abi.encodeWithSelector(CentuariErrorsLib.OnlyCentuariCLOB.selector));
         ICentuari(centuari).createDataStore(config);
     }
 
     function test_SetDataStore_RevertIf_OnlyOwner() public{
         //Change caller to Lending CLOB
-        vm.startPrank(address(lendingCLOB));
+        vm.startPrank(address(centuariCLOB));
 
         //Create a DataStore
         MarketConfig memory config = MarketConfig({

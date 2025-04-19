@@ -27,7 +27,25 @@ struct VaultConfig{
     string name;
 }
 
+struct Order {
+    Id id;
+    address trader;
+    uint256 amount;
+    uint256 collateralAmount;
+    uint256 rate;
+    Side side;
+    Status status;
+}
+
 enum Side {
     LEND,
     BORROW
+}
+
+enum Status {
+    OPEN, // Order is active and available for matching
+    PARTIALLY_FILLED, // Order is partially matched but still active
+    FILLED, // Order is completely matched
+    CANCELLED, // Order was cancelled by the trader
+    EXPIRED // Order has expired (reserved for future use)
 }
