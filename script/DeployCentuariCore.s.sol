@@ -4,7 +4,7 @@ pragma solidity ^0.8.26;
 import {BaseScript} from "./BaseScript.s.sol";
 import {console2} from "forge-std/Script.sol";
 import {Centuari} from "../src/core/Centuari.sol";
-import {LendingCLOB} from "../src/core/LendingCLOB.sol";
+import {CentuariCLOB} from "../src/core/CentuariCLOB.sol";
 import {CentuariPrime} from "../src/core/CentuariPrime.sol";
 import {MockToken} from "../src/mocks/MockToken.sol";
 import {MockOracle} from "../src/mocks/MockOracle.sol";
@@ -15,16 +15,16 @@ contract DeployCentuariCore is BaseScript {
         Centuari centuari = new Centuari(deployer);
         console2.log("Centuari deployed at: %s", address(centuari));
 
-        //Deploy LendingCLOB
-        LendingCLOB lendingCLOB = new LendingCLOB(deployer, address(centuari));
-        console2.log("LendingCLOB deployed at: %s", address(lendingCLOB));
+        //Deploy CentuariCLOB
+        CentuariCLOB centuariCLOB = new CentuariCLOB(deployer, address(centuari));
+        console2.log("CentuariCLOB deployed at: %s", address(centuariCLOB));
 
-        //Set LendingCLOB for Centuari
-        centuari.setLendingCLOB(address(lendingCLOB));
-        console2.log("Centuari set LendingCLOB");
+        //Set CentuariCLOB for Centuari
+        centuari.setCentuariCLOB(address(centuariCLOB));
+        console2.log("Centuari set CentuariCLOB");
 
         //Deploy CentuariPrime
-        CentuariPrime centuariPrime = new CentuariPrime(deployer, address(lendingCLOB), address(centuari));
+        CentuariPrime centuariPrime = new CentuariPrime(deployer, address(centuariCLOB), address(centuari));
         console2.log("CentuariPrime deployed at: %s", address(centuariPrime));
 
         //Deploy Mock Oracles
@@ -70,7 +70,7 @@ contract DeployCentuariCore is BaseScript {
         string memory deployedCentuariCore = string.concat(
             "\n# Deployed Centuari Core contract addresses\n",
             "CENTUARI=", vm.toString(address(centuari)), "\n",
-            "LENDING_CLOB=", vm.toString(address(lendingCLOB)), "\n",
+            "LENDING_CLOB=", vm.toString(address(centuariCLOB)), "\n",
             "CENTUARI_PRIME=", vm.toString(address(centuariPrime)), "\n"
         );
         vm.writeFile(".env", string.concat(vm.readFile(".env"), deployedCentuariCore));

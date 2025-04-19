@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.26;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -39,9 +39,8 @@ contract CentuariCLOB is Ownable, ReentrancyGuard {
         _;
     }
     
-    constructor(address owner_, address centuari_, address centuariAlpha_) Ownable(owner_) {
+    constructor(address owner_, address centuari_) Ownable(owner_) {
         centuari = centuari_;
-        centuariAlpha = centuariAlpha_;
     }
 
     function setCentuari(address centuari_) external onlyOwner {
