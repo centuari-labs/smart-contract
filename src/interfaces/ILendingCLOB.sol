@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.26;
 
 /// @title ILendingCLOB - Interface for the LendingCLOB contract
 /// @notice Manages lending and borrowing orders with rate-time priority matching

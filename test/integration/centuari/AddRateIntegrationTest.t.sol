@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.26;
 
 import {BaseTest} from "../../BaseTest.sol";
 import {MarketConfig, Id} from "../../../src/types/CommonTypes.sol";
