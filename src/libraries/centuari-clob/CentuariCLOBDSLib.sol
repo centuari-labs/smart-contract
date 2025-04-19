@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.26;
 
 import {DataStore} from "../../core/DataStore.sol";
 
@@ -8,7 +8,7 @@ library CentuariCLOBDSLib {
     string public constant ORDER_ID_UINT256 = "ORDER_ID";
     string public constant ORDER_TRADER_ADDRESS = "ORDER_TRADER";
     string public constant ORDER_AMOUNT_UINT256 = "ORDER_AMOUNT";
-    string public constant ORDER_COLLAT_AMOUNT_UINT256 = "ORDER_COLLAT_AMOUNT";
+    string public constant ORDER_COLLATERAL_AMOUNT_UINT256 = "ORDER_COLLATERAL_AMOUNT";
     string public constant ORDER_RATE_UINT256 = "ORDER_RATE";
     string public constant ORDER_SIDE_UINT256 = "ORDER_SIDE";
     string public constant ORDER_STATUS_UINT256 = "ORDER_STATUS";
@@ -21,7 +21,7 @@ library CentuariCLOBDSLib {
         return keccak256(abi.encodePacked(orderId, ORDER_AMOUNT_UINT256));
     }
     function getOrderCollateralAmountKey(uint256 orderId) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(orderId, ORDER_COLLAT_AMOUNT_UINT256));
+        return keccak256(abi.encodePacked(orderId, ORDER_COLLATERAL_AMOUNT_UINT256));
     }
     function getOrderRateKey(uint256 orderId) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(orderId, ORDER_RATE_UINT256));
