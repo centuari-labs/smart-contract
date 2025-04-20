@@ -14,9 +14,10 @@ import {CentuariEventsLib} from "../libraries/Centuari/CentuariEventsLib.sol";
 import {CentuariCLOBEventsLib} from "../libraries/centuari-clob/CentuariCLOBEventsLib.sol";
 import {DataStore} from "./DataStore.sol";
 import {ICentuari} from "../interfaces/ICentuari.sol";
+import {ICentuariCLOB} from "../interfaces/ICentuariCLOB.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract CentuariCLOB is Ownable, ReentrancyGuard {
+contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
     using MarketConfigLib for MarketConfig;
 
     mapping(Id => address) public dataStores;
@@ -91,7 +92,7 @@ contract CentuariCLOB is Ownable, ReentrancyGuard {
             revert CentuariCLOBErrorsLib.InvalidAmount();
         }
 
-        if (side == Side.LEND && collateralAmount != 0) {
+        if (side == Side.BORROW && collateralAmount != 0) {
             revert CentuariCLOBErrorsLib.InvalidCollateralAmount();
         }
 
