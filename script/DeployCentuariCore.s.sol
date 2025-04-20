@@ -79,7 +79,7 @@ contract DeployCentuariCore is BaseScript {
             "CENTUARI=",
             vm.toString(address(centuari)),
             "\n",
-            "LENDING_CLOB=",
+            "CENTUARI_CLOB=",
             vm.toString(address(centuariCLOB)),
             "\n",
             "CENTUARI_PRIME=",
