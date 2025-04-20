@@ -21,11 +21,11 @@ library CentuariDSLib {
     string public constant BOND_TOKEN_ADDRESS = "BOND_TOKEN";
     string public constant LAST_ACCRUE_UINT256 = "LAST_ACCRUE";
 
-    function getTotalSuppySharesKey(uint256 rate) internal pure returns (bytes32) {
+    function getTotalSupplySharesKey(uint256 rate) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(rate, TOTAL_SUPPLY_SHARES_UINT256));
     }
 
-    function getTotalSuppyAssetsKey(uint256 rate) internal pure returns (bytes32) {
+    function getTotalSupplyAssetsKey(uint256 rate) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(rate, TOTAL_SUPPLY_ASSETS_UINT256));
     }
 

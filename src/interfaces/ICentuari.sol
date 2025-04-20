@@ -28,4 +28,8 @@ interface ICentuari {
         returns (uint256);
     function transferFrom(MarketConfig memory config, address token, address from, address to, uint256 amount)
         external;
+    function getUserAssetsFromShares(MarketConfig memory config, uint256 rate, uint256 shares)
+        external
+        view
+        returns (uint256);
 }
