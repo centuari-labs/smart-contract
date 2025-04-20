@@ -177,7 +177,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
     {
         DataStore dataStore = DataStore(dataStores[config.id()]);
         if (dataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(rate_)) != address(0)) {
-            revert CentuariErrorsLib.RateAlreadyExists();
+            return; //Rate already exists, cancel add rate
         }
         if (rate_ == 0 || rate_ == 100e16) revert CentuariErrorsLib.InvalidRate();
 
