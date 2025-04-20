@@ -14,7 +14,7 @@ import {ICentuariCLOB} from "../interfaces/ICentuariCLOB.sol";
 
 // Internal imports - types
 import {
-    Id, MarketConfig, VaultConfig, VaultMarketSupplyConfig, VaultMarketWithdrawConfig
+    Id, MarketConfig, VaultConfig, VaultMarketSupplyConfig, VaultMarketWithdrawConfig, Side
 } from "../types/CommonTypes.sol";
 
 // Internal imports - libraries
@@ -202,15 +202,21 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             MarketConfig memory marketConfig = supplyQueue[i].marketConfig;
             uint256 rate = supplyQueue[i].rate;
 
+            // Get vault balance of the market
+            address vaultBondToken = DataStore(CENTUARI.getDataStore(marketConfig)).getAddress(CentuariDSLib.getBondTokenAddressKey(rate));
+            uint256 vaultBondBalance = IERC20(vaultBondToken).balanceOf(msg.sender);
             uint256 cap = supplyQueue[i].cap;
-            if (cap == 0) continue;
+            if (vaultBondBalance >= cap) continue;
 
-            if (cap < amount) {
-                supplyAmount = cap;
-                amount -= cap;
+            // Calculate remaining cap
+            uint256 remainingCap = cap - vaultBondBalance;
+            if (remainingCap < amount) {
+                supplyAmount = remainingCap;
+                amount -= remainingCap;
             }
 
-            //@todo place order to CLOB
+            // Place order to CLOB
+            CENTUARI_CLOB.placeOrder(marketConfig, supplyAmount, 0, rate, Side.LEND);
         }
     }
 
@@ -436,5 +442,9 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
 
     function reallocate() external {
         //@todo implement reallocate
+    }
+
+    function cancelOrder() external {
+        //@todo implement cancel
     }
 }
