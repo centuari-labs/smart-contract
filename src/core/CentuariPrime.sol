@@ -216,7 +216,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             }
 
             // Place order to CLOB
-            CENTUARI_CLOB.placeOrder(marketConfig, supplyAmount, 0, rate, Side.LEND);
+            CENTUARI_CLOB.placeOrder(marketConfig, rate, Side.LEND, supplyAmount, 0);
         }
     }
 

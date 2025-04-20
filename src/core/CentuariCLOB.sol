@@ -67,6 +67,8 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
         dataStore.setUint(CentuariDSLib.MATURITY_UINT256, config.maturity);
         dataStore.setBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL, true);
 
+        CENTUARI.createDataStore(config);
+
         emit CentuariEventsLib.CreateDataStore(
             address(dataStore), config.loanToken, config.collateralToken, config.maturity
         );
@@ -83,7 +85,7 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
         emit CentuariEventsLib.SetDataStore(dataStore, config.loanToken, config.collateralToken, config.maturity);
     }
 
-    function placeOrder(MarketConfig calldata config, uint256 amount, uint256 collateralAmount, uint256 rate, Side side)
+    function placeOrder(MarketConfig calldata config, uint256 rate, Side side, uint256 amount, uint256 collateralAmount)
         external
         onlyActiveMarket(config.id())
         nonReentrant
@@ -199,6 +201,8 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
         uint256 matchedAmount
     ) internal onlyActiveMarket(config.id()) nonReentrant {
         DataStore dataStore = DataStore(dataStores[config.id()]);
+
+        CENTUARI.addRate(config, rate);
 
         // Update match order state on centuari
         uint256 remainingMatchOrderAmount = matchOrder.amount - matchedAmount;
