@@ -53,9 +53,8 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
 
     function createDataStore(MarketConfig memory config) external onlyOwner {
         // Validate market config
-        //@todo need to check if infinite maturity is allowed
         if (
-            config.loanToken == address(0) || config.collateralToken == address(0) || config.maturity <= block.timestamp
+            config.loanToken == address(0) || config.collateralToken == address(0)
         ) revert CentuariErrorsLib.InvalidMarketConfig();
 
         Id marketConfigId = config.id();
@@ -78,7 +77,7 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
     function setDataStore(MarketConfig memory config, address dataStore) external onlyOwner {
         //Validate market config
         if (
-            config.loanToken == address(0) || config.collateralToken == address(0) || config.maturity <= block.timestamp
+            config.loanToken == address(0) || config.collateralToken == address(0)
         ) revert CentuariErrorsLib.InvalidMarketConfig();
 
         dataStores[config.id()] = dataStore;
@@ -252,13 +251,16 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
     }
 
     function cancelOrder(MarketConfig calldata config, uint256 orderId) external nonReentrant {
-        //@todo update market to not active if expired
-
         // Validate market config
         if (dataStores[config.id()] == address(0)) {
             revert CentuariCLOBErrorsLib.InvalidMarketConfig();
         }
         DataStore dataStore = DataStore(dataStores[config.id()]);
+
+        // Deactivate market if expired
+        if (block.timestamp >= dataStore.getUint(CentuariDSLib.MATURITY_UINT256)) {
+            dataStore.setBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL, false);
+        }
 
         // Validate order belongs to trader
         address trader = dataStore.getAddress(CentuariCLOBDSLib.getOrderTraderKey(orderId));

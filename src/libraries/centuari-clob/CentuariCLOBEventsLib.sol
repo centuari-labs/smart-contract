@@ -14,6 +14,6 @@ library CentuariCLOBEventsLib {
         Side side,
         Status status
     );
-    event OrderMatched(Id indexed id, uint256 newOrderId, uint256 matchOrderId, uint256 matchedAmount);
+    event OrderMatched(Id indexed id, uint256 newOrderId, uint256 oppositeOrderId, uint256 matchedAmount);
     event OrderCancelled(Id indexed id, uint256 orderId);
 }
