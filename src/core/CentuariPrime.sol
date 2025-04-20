@@ -10,6 +10,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 // Internal imports - contracts
 import {DataStore} from "./DataStore.sol";
 import {ICentuari} from "../interfaces/ICentuari.sol";
+import {ICentuariCLOB} from "../interfaces/ICentuariCLOB.sol";
 
 // Internal imports - types
 import {
@@ -32,7 +33,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
 
     mapping(Id => address) public vaults;
 
-    address public centuariCLOB;
+    ICentuariCLOB public CENTUARI_CLOB;
     ICentuari public CENTUARI;
 
     modifier onlyActiveVault(Id id) {
@@ -51,12 +52,12 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
     }
 
     constructor(address owner_, address centuariCLOB_, address centuari_) Ownable(owner_) {
-        centuariCLOB = centuariCLOB_;
+        CENTUARI_CLOB = ICentuariCLOB(centuariCLOB_);
         CENTUARI = ICentuari(centuari_);
     }
 
     function setCentuariCLOB(address centuariCLOB_) external onlyOwner {
-        centuariCLOB = centuariCLOB_;
+        CENTUARI_CLOB = ICentuariCLOB(centuariCLOB_);
     }
 
     function setCentuari(address centuari_) external onlyOwner {

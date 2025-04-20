@@ -21,7 +21,7 @@ contract CentuariCLOB is Ownable, ReentrancyGuard {
 
     mapping(Id => address) public dataStores;
     mapping(address => Order[]) public traderOrders;
-    address public centuari;
+    ICentuari public CENTUARI;
     address public centuariAlpha;
 
     modifier onlyActiveMarket(Id id) {
@@ -39,11 +39,11 @@ contract CentuariCLOB is Ownable, ReentrancyGuard {
     }
 
     constructor(address owner_, address centuari_) Ownable(owner_) {
-        centuari = centuari_;
+        CENTUARI = ICentuari(centuari_);
     }
 
     function setCentuari(address centuari_) external onlyOwner {
-        centuari = centuari_;
+        CENTUARI = ICentuari(centuari_);
     }
 
     function setCentuariAlpha(address centuariAlpha_) external onlyOwner {
@@ -101,10 +101,10 @@ contract CentuariCLOB is Ownable, ReentrancyGuard {
         // ---------------------------
         if (side == Side.LEND) {
             // LEND => deposit debtToken
-            IERC20(config.loanToken).transferFrom(owner(), centuari, amount);
+            IERC20(config.loanToken).transferFrom(owner(), address(CENTUARI), amount);
         } else if (side == Side.BORROW) {
             // BORROW => deposit collateralToken
-            IERC20(config.collateralToken).transferFrom(owner(), centuari, collateralAmount);
+            IERC20(config.collateralToken).transferFrom(owner(), address(CENTUARI), collateralAmount);
         }
 
         // ---------------------------
@@ -212,24 +212,24 @@ contract CentuariCLOB is Ownable, ReentrancyGuard {
             dataStore.setUint(CentuariCLOBDSLib.getOrderCollateralAmountKey(matchOrder.id), collateralAmount);
 
             // Call centuari necessary functions to update state
-            ICentuari(centuari).supply(config, rate, newOrder.trader, matchedAmount);
-            ICentuari(centuari).supplyCollateral(config, rate, matchOrder.trader, collateralAmount);
-            ICentuari(centuari).borrow(config, rate, matchOrder.trader, matchedAmount);
+            CENTUARI.supply(config, rate, newOrder.trader, matchedAmount);
+            CENTUARI.supplyCollateral(config, rate, matchOrder.trader, collateralAmount);
+            CENTUARI.borrow(config, rate, matchOrder.trader, matchedAmount);
 
             // Transfer loanToken from newOrder.trader to matchOrder.trader
-            ICentuari(centuari).transferFrom(
+            CENTUARI.transferFrom(
                 config, config.loanToken, newOrder.trader, matchOrder.trader, matchedAmount
             );
         } else if (side == Side.BORROW) {
             // Call centuari necessary functions to update state
-            ICentuari(centuari).supply(config, rate, matchOrder.trader, matchedAmount);
-            ICentuari(centuari).supplyCollateral(
+            CENTUARI.supply(config, rate, matchOrder.trader, matchedAmount);
+            CENTUARI.supplyCollateral(
                 config, rate, newOrder.trader, ((newOrder.collateralAmount * matchedAmount) / newOrder.amount)
             );
-            ICentuari(centuari).borrow(config, rate, newOrder.trader, matchedAmount);
+            CENTUARI.borrow(config, rate, newOrder.trader, matchedAmount);
 
             // Transfer loanToken from matchOrder.trader to newOrder.trader
-            ICentuari(centuari).transferFrom(
+            CENTUARI.transferFrom(
                 config, config.loanToken, matchOrder.trader, newOrder.trader, matchedAmount
             );
         }
@@ -274,9 +274,9 @@ contract CentuariCLOB is Ownable, ReentrancyGuard {
 
         // Transfer tokens from centuari to trader
         if (side == Side.LEND) {
-            ICentuari(centuari).transferFrom(config, config.loanToken, address(this), msg.sender, amount);
+            CENTUARI.transferFrom(config, config.loanToken, address(this), msg.sender, amount);
         } else if (side == Side.BORROW) {
-            ICentuari(centuari).transferFrom(
+            CENTUARI.transferFrom(
                 config, config.collateralToken, address(this), msg.sender, collateralAmount
             );
         }
