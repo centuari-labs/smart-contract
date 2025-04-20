@@ -79,15 +79,19 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         vault.setString(CentuariPrimeDSLib.NAME_STRING, config.name);
         vault.setBool(CentuariPrimeDSLib.IS_ACTIVE_BOOL, true);
 
+        CentuariPrimeToken centuariPrimeToken = new CentuariPrimeToken(config.curator, config.name);
+        vault.setAddress(CentuariPrimeDSLib.CENTUARI_PRIME_TOKEN_ADDRESS, address(centuariPrimeToken));
+
         emit CentuariPrimeEventsLib.CreateVault(msg.sender, address(vault), config.token, config.name);
     }
 
     function deposit(VaultConfig memory config, uint256 amount)
         external
         onlyActiveVault(config.id())
-        onlyVaultOwner(config.id())
         nonReentrant
     {
+        if (amount == 0) revert CentuariPrimeErrorsLib.InvalidAmount();
+
         // Get the vault's data store
         DataStore vault = DataStore(vaults[config.id()]);
 
@@ -99,18 +103,8 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         // Calculate shares to mint
         uint256 shares = _calculateSharesToMint(vault, amount);
 
-        // Get or create the vault token
-        address tokenAddress = vault.getAddress(CentuariPrimeDSLib.CENTUARI_PRIME_TOKEN_ADDRESS);
-        if (tokenAddress == address(0)) {
-            // First deposit - create the token
-            string memory name = vault.getString(CentuariPrimeDSLib.NAME_STRING);
-            CentuariPrimeToken centuariPrimeToken =
-                new CentuariPrimeToken(vault.getAddress(CentuariPrimeDSLib.CURATOR_ADDRESS), name);
-            vault.setAddress(CentuariPrimeDSLib.CENTUARI_PRIME_TOKEN_ADDRESS, address(centuariPrimeToken));
-            tokenAddress = address(centuariPrimeToken);
-        }
-
         // Mint shares to the user
+        address tokenAddress = vault.getAddress(CentuariPrimeDSLib.CENTUARI_PRIME_TOKEN_ADDRESS);
         CentuariPrimeToken(tokenAddress).mint(msg.sender, shares);
 
         // Update total shares
@@ -122,8 +116,8 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         vault.setUint(CentuariPrimeDSLib.TOTAL_ASSETS_UINT256, totalAssets + amount);
 
         // Transfer tokens from user to Centuari
-        address collateralToken = vault.getAddress(CentuariPrimeDSLib.TOKEN_ADDRESS);
-        IERC20(collateralToken).safeTransferFrom(msg.sender, address(CENTUARI), amount);
+        address depositToken = vault.getAddress(CentuariPrimeDSLib.TOKEN_ADDRESS);
+        IERC20(depositToken).safeTransferFrom(msg.sender, address(CENTUARI), amount);
 
         // Supply to markets according to the supply queue
         _supplyToMarkets(vault, amount);
@@ -180,9 +174,9 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             // Calculate value of these bonds
             CENTUARI.accrueInterest(marketConfig, supplyQueue[i].rate);
             uint256 totalMarketSupplyShares =
-                DataStore(marketDataStore).getUint(CentuariDSLib.getTotalSuppySharesKey(supplyQueue[i].rate));
+                DataStore(marketDataStore).getUint(CentuariDSLib.getTotalSupplySharesKey(supplyQueue[i].rate));
             uint256 totalMarketSupplyAssets =
-                DataStore(marketDataStore).getUint(CentuariDSLib.getTotalSuppyAssetsKey(supplyQueue[i].rate));
+                DataStore(marketDataStore).getUint(CentuariDSLib.getTotalSupplyAssetsKey(supplyQueue[i].rate));
 
             if (totalMarketSupplyShares > 0) {
                 uint256 marketValue = (bondBalance * totalMarketSupplyAssets) / totalMarketSupplyShares;
@@ -196,6 +190,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
     function _supplyToMarkets(DataStore vault, uint256 amount) internal {
         bytes memory supplyQueueBytes = vault.getBytes(CentuariPrimeDSLib.SUPPLY_QUEUE_BYTES);
         VaultMarketSupplyConfig[] memory supplyQueue = abi.decode(supplyQueueBytes, (VaultMarketSupplyConfig[]));
+        address curator = DataStore(vault).getAddress(CentuariPrimeDSLib.CURATOR_ADDRESS);
 
         for (uint256 i = 0; i < supplyQueue.length; i++) {
             uint256 supplyAmount = amount;
@@ -203,8 +198,8 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             uint256 rate = supplyQueue[i].rate;
 
             // Get vault balance of the market
-            address vaultBondToken = DataStore(CENTUARI.getDataStore(marketConfig)).getAddress(CentuariDSLib.getBondTokenAddressKey(rate));
-            uint256 vaultBondBalance = IERC20(vaultBondToken).balanceOf(msg.sender);
+            address marketBondToken = DataStore(CENTUARI.getDataStore(marketConfig)).getAddress(CentuariDSLib.getBondTokenAddressKey(rate));
+            uint256 vaultBondBalance = IERC20(marketBondToken).balanceOf(curator);
             uint256 cap = supplyQueue[i].cap;
             if (vaultBondBalance >= cap) continue;
 
@@ -217,6 +212,8 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
 
             // Place order to CLOB
             CENTUARI_CLOB.placeOrder(marketConfig, rate, Side.LEND, supplyAmount, 0);
+
+            if(amount == 0) break;
         }
     }
 
@@ -228,7 +225,6 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
     function withdraw(VaultConfig memory config, uint256 shares)
         external
         onlyActiveVault(config.id())
-        onlyVaultOwner(config.id())
         nonReentrant
     {
         if (shares == 0) revert CentuariPrimeErrorsLib.InvalidAmount();
@@ -267,7 +263,6 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         bytes memory withdrawQueueBytes = vault.getBytes(CentuariPrimeDSLib.WITHDRAW_QUEUE_BYTES);
         VaultMarketWithdrawConfig[] memory withdrawQueue = abi.decode(withdrawQueueBytes, (VaultMarketWithdrawConfig[]));
 
-        uint256 totalWithdrawn = 0;
         uint256 remaining = assets;
         for (uint256 i = 0; i < withdrawQueue.length; i++) {
             MarketConfig memory marketConfig = withdrawQueue[i].marketConfig;
@@ -275,19 +270,27 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
 
             address vaultBondToken =
                 DataStore(CENTUARI.getDataStore(marketConfig)).getAddress(CentuariDSLib.getBondTokenAddressKey(rate));
-            uint256 vaultBondBalance = IERC20(vaultBondToken).balanceOf(msg.sender); //Get vault bond token from curator
-            uint256 withdrawAmount = remaining;
-            if (vaultBondBalance < remaining) {
-                withdrawAmount = vaultBondBalance;
+            address curator = DataStore(vault).getAddress(CentuariPrimeDSLib.CURATOR_ADDRESS);
+            uint256 vaultBondBalance = IERC20(vaultBondToken).balanceOf(curator);
+            uint256 vaultAssets = CENTUARI.getUserAssetsFromShares(marketConfig, rate, vaultBondBalance);
+
+            uint256 withdrawAmount = vaultBondBalance;
+            uint256 deductedAssets = vaultAssets;
+            if (vaultAssets > remaining) {
+                withdrawAmount = (vaultBondBalance * remaining) / vaultAssets;
+                deductedAssets = remaining;
             }
-            remaining -= withdrawAmount;
+
+            remaining -= deductedAssets;
 
             CENTUARI.withdraw(marketConfig, rate, withdrawAmount);
-            totalWithdrawn += withdrawAmount;
+            
+            if(remaining == 0) break;
         }
+
         if (remaining > 0) revert CentuariPrimeErrorsLib.InsufficientLiquidity();
         address loanToken = vault.getAddress(CentuariPrimeDSLib.TOKEN_ADDRESS);
-        IERC20(loanToken).safeTransfer(msg.sender, totalWithdrawn);
+        IERC20(loanToken).safeTransfer(msg.sender, assets);
     }
 
     function setSupplyQueue(VaultConfig memory config, VaultMarketSupplyConfig[] memory supplyQueue)

@@ -69,7 +69,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
     function createDataStore(MarketConfig memory config) external onlyCentuariCLOB {
         // Validate market config
         if (
-            config.loanToken == address(0) || config.collateralToken == address(0) || config.maturity <= block.timestamp
+            config.loanToken == address(0) || config.collateralToken == address(0)
         ) revert CentuariErrorsLib.InvalidMarketConfig();
 
         Id marketConfigId = config.id();
@@ -90,7 +90,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
     function setDataStore(MarketConfig memory config, address dataStore) external onlyOwner {
         //Validate market config
         if (
-            config.loanToken == address(0) || config.collateralToken == address(0) || config.maturity <= block.timestamp
+            config.loanToken == address(0) || config.collateralToken == address(0)
         ) revert CentuariErrorsLib.InvalidMarketConfig();
 
         dataStores[config.id()] = dataStore;
@@ -160,8 +160,8 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         uint256 interest = (interestPerYear * timePassed) / 365 days;
 
         dataStore.setUint(
-            CentuariDSLib.getTotalSuppyAssetsKey(rate),
-            dataStore.getUint(CentuariDSLib.getTotalSuppyAssetsKey(rate)) + interest
+            CentuariDSLib.getTotalSupplyAssetsKey(rate),
+            dataStore.getUint(CentuariDSLib.getTotalSupplyAssetsKey(rate)) + interest
         );
         dataStore.setUint(
             CentuariDSLib.getTotalBorrowAssetsKey(rate),
@@ -212,8 +212,8 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         _accrueInterest(config.id(), rate);
 
         DataStore dataStore = DataStore(dataStores[config.id()]);
-        uint256 totalSupplyShares = dataStore.getUint(CentuariDSLib.getTotalSuppySharesKey(rate));
-        uint256 totalSupplyAssets = dataStore.getUint(CentuariDSLib.getTotalSuppyAssetsKey(rate));
+        uint256 totalSupplyShares = dataStore.getUint(CentuariDSLib.getTotalSupplySharesKey(rate));
+        uint256 totalSupplyAssets = dataStore.getUint(CentuariDSLib.getTotalSupplyAssetsKey(rate));
 
         uint256 shares = 0;
         if (totalSupplyShares == 0) {
@@ -222,8 +222,8 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
             shares = (amount * totalSupplyShares) / totalSupplyAssets;
         }
 
-        dataStore.setUint(CentuariDSLib.getTotalSuppySharesKey(rate), totalSupplyShares + shares);
-        dataStore.setUint(CentuariDSLib.getTotalSuppyAssetsKey(rate), totalSupplyAssets + amount);
+        dataStore.setUint(CentuariDSLib.getTotalSupplySharesKey(rate), totalSupplyShares + shares);
+        dataStore.setUint(CentuariDSLib.getTotalSupplyAssetsKey(rate), totalSupplyAssets + amount);
 
         // mint tokenized bond to the lender
         BondToken(dataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(rate))).mint(user, shares);
@@ -273,14 +273,15 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         if (shares == 0) revert CentuariErrorsLib.InvalidAmount();
         if (block.timestamp < config.maturity) revert CentuariErrorsLib.MarketNotMature();
 
+        _accrueInterest(config.id(), rate);
+
         DataStore dataStore = DataStore(dataStores[config.id()]);
-        uint256 totalSupplyShares = dataStore.getUint(CentuariDSLib.getTotalSuppySharesKey(rate));
-        uint256 totalSupplyAssets = dataStore.getUint(CentuariDSLib.getTotalSuppyAssetsKey(rate));
+        uint256 totalSupplyShares = dataStore.getUint(CentuariDSLib.getTotalSupplySharesKey(rate));
+        uint256 totalSupplyAssets = dataStore.getUint(CentuariDSLib.getTotalSupplyAssetsKey(rate));
         address loanTokenAddress = dataStore.getAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS);
         address bondTokenAddress = dataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(rate));
 
         if (IERC20(bondTokenAddress).balanceOf(msg.sender) < shares) revert CentuariErrorsLib.InsufficientShares();
-        _accrueInterest(config.id(), rate);
 
         // Calculate amount to withdraw including interest
         uint256 amount = (shares * totalSupplyAssets) / totalSupplyShares;
@@ -289,8 +290,8 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
             revert CentuariErrorsLib.InsufficientLiquidity();
         }
 
-        dataStore.setUint(CentuariDSLib.getTotalSuppySharesKey(rate), totalSupplyShares - shares);
-        dataStore.setUint(CentuariDSLib.getTotalSuppyAssetsKey(rate), totalSupplyAssets - amount);
+        dataStore.setUint(CentuariDSLib.getTotalSupplySharesKey(rate), totalSupplyShares - shares);
+        dataStore.setUint(CentuariDSLib.getTotalSupplyAssetsKey(rate), totalSupplyAssets - amount);
 
         BondToken(bondTokenAddress).burn(msg.sender, shares);
         IERC20(loanTokenAddress).safeTransfer(msg.sender, amount);
@@ -377,7 +378,8 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         onlyActiveRate(config.id(), rate)
     {
         if (user == address(0)) revert CentuariErrorsLib.InvalidUser();
-        if (block.timestamp > config.maturity || !_isHealthy(config.id(), rate, user)) {
+        if ((block.timestamp < config.maturity && config.maturity != 0) 
+            || _isHealthy(config.id(), rate, user)) {
             revert CentuariErrorsLib.LiquidationNotAllowed();
         }
 
@@ -417,6 +419,18 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         returns (uint256)
     {
         return DataStore(dataStores[config.id()]).getUint(CentuariDSLib.getUserBorrowSharesKey(rate, user));
+    }
+
+    function getUserAssetsFromShares(MarketConfig memory config, uint256 rate, uint256 shares)
+        external
+        view
+        returns (uint256)
+    {
+        DataStore dataStore = DataStore(dataStores[config.id()]);
+        uint256 totalSupplyShares = dataStore.getUint(CentuariDSLib.getTotalSupplySharesKey(rate));
+        uint256 totalSupplyAssets = dataStore.getUint(CentuariDSLib.getTotalSupplyAssetsKey(rate));
+        
+        return (shares * totalSupplyAssets) / totalSupplyShares;
     }
 
     function flashLoan(address token, uint256 amount, bytes calldata data) external {
