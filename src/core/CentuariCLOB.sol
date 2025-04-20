@@ -95,7 +95,7 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
             revert CentuariCLOBErrorsLib.InvalidAmount();
         }
 
-        if (side == Side.BORROW && collateralAmount != 0) {
+        if (side == Side.BORROW && collateralAmount == 0) {
             revert CentuariCLOBErrorsLib.InvalidCollateralAmount();
         }
 
@@ -134,22 +134,23 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
         // 3. Match loop
         // ---------------------------
         Side oppositeSide = (side == Side.LEND) ? Side.BORROW : Side.LEND;
-        uint256 matchOrderId = dataStore.getUint(OrderQueueLib.getLinkedHeadKey(rate, oppositeSide));
+        uint256 oppositeOrderId = dataStore.getUint(OrderQueueLib.getLinkedHeadKey(rate, oppositeSide));
 
-        while (matchOrderId != 0 && newOrder.status != Status.FILLED) {
-            address matchOrderTrader = dataStore.getAddress(CentuariCLOBDSLib.getOrderTraderKey(matchOrderId));
+        while (oppositeOrderId != 0 && newOrder.status != Status.FILLED) {
+            uint256 nextoppositeOrderId = dataStore.getUint(OrderQueueLib.getLinkedNextKey(oppositeOrderId));
+            address oppositeOrderTrader = dataStore.getAddress(CentuariCLOBDSLib.getOrderTraderKey(oppositeOrderId));
 
             // Skip if FILLED, CANCELLED, or same trader
-            if (matchOrderTrader == msg.sender) {
-                matchOrderId = dataStore.getUint(OrderQueueLib.getLinkedNextKey(matchOrderId));
+            if (oppositeOrderTrader == msg.sender) {
+                oppositeOrderId = nextoppositeOrderId;
                 continue;
             }
 
-            uint256 matchOrderAmount = dataStore.getUint(CentuariCLOBDSLib.getOrderAmountKey(matchOrderId));
-            uint256 matchOrdercollateralAmount =
-                dataStore.getUint(CentuariCLOBDSLib.getOrderCollateralAmountKey(matchOrderId));
+            uint256 oppositeOrderAmount = dataStore.getUint(CentuariCLOBDSLib.getOrderAmountKey(oppositeOrderId));
+            uint256 oppositeOrdercollateralAmount =
+                dataStore.getUint(CentuariCLOBDSLib.getOrderCollateralAmountKey(oppositeOrderId));
 
-            uint256 matchedAmount = (matchOrderAmount < newOrder.amount) ? matchOrderAmount : newOrder.amount;
+            uint256 matchedAmount = (oppositeOrderAmount < newOrder.amount) ? oppositeOrderAmount : newOrder.amount;
             _matchOrder(
                 config,
                 rate,
@@ -161,10 +162,10 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
                     collateralAmount: newOrder.collateralAmount
                 }),
                 MatchedOrder({
-                    id: matchOrderId,
-                    trader: matchOrderTrader,
-                    amount: matchOrderAmount,
-                    collateralAmount: matchOrdercollateralAmount
+                    id: oppositeOrderId,
+                    trader: oppositeOrderTrader,
+                    amount: oppositeOrderAmount,
+                    collateralAmount: oppositeOrdercollateralAmount
                 }),
                 matchedAmount
             );
@@ -175,11 +176,11 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
             newOrder.status = (newOrder.amount == 0) ? Status.FILLED : Status.PARTIALLY_FILLED;
 
             // Get next match order
-            matchOrderId = dataStore.getUint(OrderQueueLib.getLinkedNextKey(matchOrderId));
+            oppositeOrderId = nextoppositeOrderId;
         }
 
         // ----------------------------------
-        // 4. If newOrder is STILL OPEN
+        // 4. If newOrder is STILL OPEN OR PARTIALLY FILLED
         // ----------------------------------
         if (newOrder.status == Status.OPEN || newOrder.status == Status.PARTIALLY_FILLED) {
             // Add new order to linked list
@@ -198,7 +199,7 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
         uint256 rate,
         Side side,
         MatchedOrder memory newOrder,
-        MatchedOrder memory matchOrder,
+        MatchedOrder memory oppositeOrder,
         uint256 matchedAmount
     ) internal onlyActiveMarket(config.id()) nonReentrant {
         DataStore dataStore = DataStore(dataStores[config.id()]);
@@ -206,46 +207,48 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
         CENTUARI.addRate(config, rate);
 
         // Update match order state on centuari
-        uint256 remainingMatchOrderAmount = matchOrder.amount - matchedAmount;
-        Status matchOrderStatus = (remainingMatchOrderAmount == 0) ? Status.FILLED : Status.PARTIALLY_FILLED;
-        dataStore.setUint(CentuariCLOBDSLib.getOrderAmountKey(matchOrder.id), remainingMatchOrderAmount);
-        dataStore.setUint(CentuariCLOBDSLib.getOrderStatusKey(matchOrder.id), uint256(matchOrderStatus));
+        uint256 remainingOppositeOrderAmount = oppositeOrder.amount - matchedAmount;
+        Status oppositeOrderStatus = (remainingOppositeOrderAmount == 0) ? Status.FILLED : Status.PARTIALLY_FILLED;
+        dataStore.setUint(CentuariCLOBDSLib.getOrderAmountKey(oppositeOrder.id), remainingOppositeOrderAmount);
+        dataStore.setUint(CentuariCLOBDSLib.getOrderStatusKey(oppositeOrder.id), uint256(oppositeOrderStatus));
 
         // Call centuari borrow and lend function
         if (side == Side.LEND) {
-            // Update collateral amount on matchOrder
-            uint256 collateralAmount = (matchOrder.collateralAmount * matchedAmount) / matchOrder.amount;
-            dataStore.setUint(CentuariCLOBDSLib.getOrderCollateralAmountKey(matchOrder.id), collateralAmount);
+            // Update collateral amount on oppositeOrder
+            uint256 collateralAmount = (oppositeOrder.collateralAmount * matchedAmount) / oppositeOrder.amount;
+            uint256 remainingCollateralAmount = oppositeOrder.collateralAmount - collateralAmount;
+            dataStore.setUint(CentuariCLOBDSLib.getOrderCollateralAmountKey(oppositeOrder.id), remainingCollateralAmount);
 
             // Call centuari necessary functions to update state
             CENTUARI.supply(config, rate, newOrder.trader, matchedAmount);
-            CENTUARI.supplyCollateral(config, rate, matchOrder.trader, collateralAmount);
-            CENTUARI.borrow(config, rate, matchOrder.trader, matchedAmount);
+            CENTUARI.supplyCollateral(config, rate, oppositeOrder.trader, collateralAmount);
+            CENTUARI.borrow(config, rate, oppositeOrder.trader, matchedAmount);
 
-            // Transfer loanToken from newOrder.trader to matchOrder.trader
+            // Transfer loanToken from newOrder.trader to oppositeOrder.trader
             CENTUARI.transferFrom(
-                config, config.loanToken, newOrder.trader, matchOrder.trader, matchedAmount
+                config, config.loanToken, newOrder.trader, oppositeOrder.trader, matchedAmount
             );
         } else if (side == Side.BORROW) {
             // Call centuari necessary functions to update state
-            CENTUARI.supply(config, rate, matchOrder.trader, matchedAmount);
+            CENTUARI.supply(config, rate, oppositeOrder.trader, matchedAmount);
             CENTUARI.supplyCollateral(
                 config, rate, newOrder.trader, ((newOrder.collateralAmount * matchedAmount) / newOrder.amount)
             );
             CENTUARI.borrow(config, rate, newOrder.trader, matchedAmount);
 
-            // Transfer loanToken from matchOrder.trader to newOrder.trader
+            // Transfer loanToken from oppositeOrder.trader to newOrder.trader
             CENTUARI.transferFrom(
-                config, config.loanToken, matchOrder.trader, newOrder.trader, matchedAmount
+                config, config.loanToken, oppositeOrder.trader, newOrder.trader, matchedAmount
             );
         }
 
-        // Remove matchOrder from linked list if match order fully filled
-        if (matchOrder.amount == matchedAmount) {
-            OrderQueueLib.unlinkOrder(dataStore, rate, side, matchOrder.id);
+        // Remove oppositeOrder from linked list if match order fully filled
+        if (oppositeOrder.amount == matchedAmount) {
+            Side oppositeSide = (side == Side.LEND) ? Side.BORROW : Side.LEND;
+            OrderQueueLib.unlinkOrder(dataStore, rate, oppositeSide, oppositeOrder.id);
         }
 
-        emit CentuariCLOBEventsLib.OrderMatched(config.id(), newOrder.id, matchOrder.id, matchedAmount);
+        emit CentuariCLOBEventsLib.OrderMatched(config.id(), newOrder.id, oppositeOrder.id, matchedAmount);
     }
 
     function cancelOrder(MarketConfig calldata config, uint256 orderId) external nonReentrant {

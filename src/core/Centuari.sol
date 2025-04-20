@@ -449,11 +449,11 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         onlyCentuariCLOB
         nonReentrant
     {
-        IERC20(token).safeTransferFrom(from, to, amount);
+        IERC20(token).safeTransferFrom(address(this), to, amount);
         emit CentuariEventsLib.TransferFrom(config.id(), token, from, to, amount);
     }
 
-    function liquidateUncollaterizeLoand() external {
+    function liquidateUncollaterizeLoan() external {
         //@todo call slashing AVS
         //check if collateral is already in Centuari vault
         //liquidate the user
