@@ -8,6 +8,7 @@ import {CentuariCLOB} from "../src/core/CentuariCLOB.sol";
 import {CentuariPrime} from "../src/core/CentuariPrime.sol";
 import {MockToken} from "../src/mocks/MockToken.sol";
 import {MockOracle} from "../src/mocks/MockOracle.sol";
+import {MarketConfig, VaultConfig} from "../src/types/CommonTypes.sol";
 
 contract DeployCentuariCore is BaseScript {
     function _deployImplementation() internal override {
@@ -31,11 +32,11 @@ contract DeployCentuariCore is BaseScript {
         MockOracle[5] memory oracles;
         MockToken musdc = MockToken(vm.envAddress("USDC"));
         MockToken[5] memory collaterals = [
-            MockToken(vm.envAddress("WETH")),
-            MockToken(vm.envAddress("WBTC")),
-            MockToken(vm.envAddress("WSOL")),
-            MockToken(vm.envAddress("WLINK")),
-            MockToken(vm.envAddress("WAAVE"))
+            MockToken(vm.envAddress("METH")),
+            MockToken(vm.envAddress("MBTC")),
+            MockToken(vm.envAddress("MSOL")),
+            MockToken(vm.envAddress("MLINK")),
+            MockToken(vm.envAddress("MAAVE"))
         ];
         uint40[5] memory prices = [2500e6, 90000e6, 200e6, 15e6, 200e6];
 
@@ -52,27 +53,44 @@ contract DeployCentuariCore is BaseScript {
 
         string memory deployedOracles = string.concat(
             "\n# Deployed Mock Oracles\n",
-            "WETH=",
+            "METH=",
             vm.toString(address(oracles[0])),
             "\n",
-            "WBTC=",
+            "MBTC=",
             vm.toString(address(oracles[1])),
             "\n",
-            "WSOL=",
+            "MSOL=",
             vm.toString(address(oracles[2])),
             "\n",
-            "WLINK=",
+            "MLINK=",
             vm.toString(address(oracles[3])),
             "\n",
-            "WAAVE=",
+            "MAAVE=",
             vm.toString(address(oracles[4])),
             "\n"
         );
         vm.writeFile(".env", string.concat(vm.readFile(".env"), deployedOracles));
 
-        //@todo Create Market for CLOB and Centuari
+        //Create Market for CLOB and Centuari
+        for (uint256 i = 0; i < collaterals.length; i++) {
+            MarketConfig memory marketConfig = MarketConfig({
+                loanToken: address(musdc),
+                collateralToken: address(collaterals[i]),
+                maturity: block.timestamp + 365 days
+            });
+            centuariCLOB.createDataStore(marketConfig);
+            centuari.setLltv(marketConfig, 90e16);
+            centuari.setOracle(marketConfig, address(oracles[i]));
+        }
 
-        //@todo Create Vault for Centuari Prime
+        //Create Vault for Centuari Prime
+        for (uint256 i = 0; i < collaterals.length; i++) {
+            centuariPrime.createVault(VaultConfig({
+                curator: deployer,
+                token: address(collaterals[i]),
+                name: string.concat("Vault ", collaterals[i].symbol())
+            }));
+        }
 
         string memory deployedCentuariCore = string.concat(
             "\n# Deployed Centuari Core contract addresses\n",
