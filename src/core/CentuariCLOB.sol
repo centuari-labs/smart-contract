@@ -53,6 +53,7 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
 
     function createDataStore(MarketConfig memory config) external onlyOwner {
         // Validate market config
+        //@todo need to check if infinite maturity is allowed
         if (
             config.loanToken == address(0) || config.collateralToken == address(0) || config.maturity <= block.timestamp
         ) revert CentuariErrorsLib.InvalidMarketConfig();
@@ -248,6 +249,8 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
     }
 
     function cancelOrder(MarketConfig calldata config, uint256 orderId) external nonReentrant {
+        //@todo update market to not active if expired
+
         // Validate market config
         if (dataStores[config.id()] == address(0)) {
             revert CentuariCLOBErrorsLib.InvalidMarketConfig();

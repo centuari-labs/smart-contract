@@ -10,11 +10,11 @@ contract DeployFaucet is BaseScript {
     function _deployImplementation() internal override {
         MockToken[6] memory mockTokens = [
             MockToken(vm.envAddress("USDC")),
-            MockToken(vm.envAddress("WETH")),
-            MockToken(vm.envAddress("WBTC")),
-            MockToken(vm.envAddress("WSOL")),
-            MockToken(vm.envAddress("WLINK")),
-            MockToken(vm.envAddress("WAAVE"))
+            MockToken(vm.envAddress("METH")),
+            MockToken(vm.envAddress("MBTC")),
+            MockToken(vm.envAddress("MSOL")),
+            MockToken(vm.envAddress("MLINK")),
+            MockToken(vm.envAddress("MAAVE"))
         ];
 
         FaucetMockToken faucetMockToken = new FaucetMockToken(mockTokens);
