@@ -102,10 +102,10 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
         // ---------------------------
         if (side == Side.LEND) {
             // LEND => deposit debtToken
-            IERC20(config.loanToken).transferFrom(owner(), address(CENTUARI), amount);
+            IERC20(config.loanToken).transferFrom(msg.sender, address(CENTUARI), amount);
         } else if (side == Side.BORROW) {
             // BORROW => deposit collateralToken
-            IERC20(config.collateralToken).transferFrom(owner(), address(CENTUARI), collateralAmount);
+            IERC20(config.collateralToken).transferFrom(msg.sender, address(CENTUARI), collateralAmount);
         }
 
         // ---------------------------
