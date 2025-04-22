@@ -16,4 +16,6 @@ library CentuariCLOBEventsLib {
     );
     event OrderMatched(Id indexed id, uint256 newOrderId, uint256 oppositeOrderId, uint256 matchedAmount);
     event OrderCancelled(Id indexed id, uint256 orderId);
+    event MarketLendingRateUpdated(Id indexed id, uint256 rate);
+    event MarketBorrowingRateUpdated(Id indexed id, uint256 rate);
 }

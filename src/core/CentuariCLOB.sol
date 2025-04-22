@@ -90,6 +90,7 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
         onlyActiveMarket(config.id())
         nonReentrant
     {
+
         if (amount == 0) {
             revert CentuariCLOBErrorsLib.InvalidAmount();
         }
@@ -99,6 +100,16 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
         }
 
         DataStore dataStore = DataStore(dataStores[config.id()]);
+        
+        // If rate is 0, it is a market order
+        if (rate == 0) {
+            if (side == Side.LEND) {
+                rate = CentuariCLOBDSLib.getMarketLendingRate(dataStore);
+            } else {
+                rate = CentuariCLOBDSLib.getMarketBorrowingRate(dataStore);
+            }
+        }
+
         // ---------------------------
         // 1. Transfer tokens to Centuari
         // ---------------------------
@@ -190,6 +201,19 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
             dataStore.setUint(CentuariCLOBDSLib.getOrderSideKey(newOrder.id), uint256(newOrder.side));
             dataStore.setUint(CentuariCLOBDSLib.getOrderStatusKey(newOrder.id), uint256(Status.OPEN));
             OrderQueueLib.appendOrder(dataStore, newOrder.rate, newOrder.side, newOrder.id);
+
+            if (side == Side.LEND && newOrder.rate < CentuariCLOBDSLib.getMarketLendingRate(dataStore)) {
+                // Update market lending rate
+                CentuariCLOBDSLib.setMarketLendingRate(dataStore, newOrder.rate);
+
+                emit CentuariCLOBEventsLib.MarketLendingRateUpdated(config.id(), newOrder.rate);
+            }
+            else if (side == Side.BORROW && newOrder.rate > CentuariCLOBDSLib.getMarketBorrowingRate(dataStore)) {
+                // Update market borrowing rate
+                CentuariCLOBDSLib.setMarketBorrowingRate(dataStore, newOrder.rate);
+
+                emit CentuariCLOBEventsLib.MarketBorrowingRateUpdated(config.id(), newOrder.rate);
+            }
         }
     }
 
