@@ -20,6 +20,10 @@ contract DeployFaucet is BaseScript {
         FaucetMockToken faucetMockToken = new FaucetMockToken(mockTokens);
         console2.log("Faucet deployed at: %s", address(faucetMockToken));
 
+        for (uint256 i = 0; i < mockTokens.length; i++) {
+            mockTokens[i].setMinter(address(faucetMockToken), true);
+        }
+
         string memory deployedFaucet = string.concat(
             "\n# Deployed Faucet Mock Token contract addresses\n",
             "FAUCET=",
