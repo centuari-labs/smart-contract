@@ -43,7 +43,7 @@ contract FaucetMockToken {
 
         lastRequestTime[_recipient] = block.timestamp;
         for (uint256 i = 0; i < _requestToken.length; i++) {
-            tokens[uint256(_requestToken[i])].mint(_recipient, amounts[uint256(_requestToken[i])]);
+            tokens[uint256(_requestToken[i])].mint(_recipient, amounts[uint256(_requestToken[i])] * (10 ** tokens[uint256(_requestToken[i])].decimals()));
         }
 
         emit TokensRequested(_recipient);
