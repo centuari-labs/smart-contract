@@ -45,7 +45,6 @@ contract MockCentuariCLOBScript is Script {
     
     // Contracts
     CentuariCLOB centuariCLOB;
-    ICentuari centuari;
     IERC20 loanToken;     // MUSDC
     IERC20 collateralToken; // MWETH
     
@@ -66,7 +65,6 @@ contract MockCentuariCLOBScript is Script {
         
         // Initialize contracts from existing deployment
         centuariCLOB = CentuariCLOB(vm.envAddress("CENTUARI_CLOB_ADDRESS"));
-        centuari = ICentuari(vm.envAddress("CENTUARI_ADDRESS"));
         
         // Specifically use MUSDC and MWETH as requested
         MUSDC_ADDRESS = vm.envAddress("MUSDC_ADDRESS");
@@ -102,7 +100,7 @@ contract MockCentuariCLOBScript is Script {
         vm.stopBroadcast();
         
         // Place orders in separate broadcasts to avoid reentrancy
-        // placeLendingOrders();
+        placeLendingOrders();
         placeBorrowingOrders();
         
         // Log the orders after matching to verify results
