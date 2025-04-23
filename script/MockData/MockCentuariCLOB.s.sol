@@ -224,18 +224,18 @@ contract MockCentuariCLOBScript is Script {
         
         vm.stopBroadcast();
         
-        // // Place each borrowing order in a separate transaction
-        // // Borrow Order 1 - Rate 5% - will fully match with LENDER_RATE_4
-        // vm.startBroadcast(BORROWER_PRIVATE_KEY);
-        // try centuariCLOB.placeOrder(marketConfig, BORROWER_RATE_1, Side.BORROW, loanAmounts[3], collateralAmounts[3]) {
-        //     console2.log("Placed borrowing order 1 from BORROWER with rate 5%, amount %d MUSDC, collateral %d MWETH", 
-        //         loanAmounts[3], collateralAmounts[3]);
-        // } catch Error(string memory reason) {
-        //     console2.log("Failed to place borrowing order 1: %s", reason);
-        // } catch (bytes memory) {
-        //     console2.log("Failed to place borrowing order 1: Unknown error");
-        // }
-        // vm.stopBroadcast();
+        // Place each borrowing order in a separate transaction
+        // Borrow Order 1 - Rate 5% - will fully match with LENDER_RATE_4
+        vm.startBroadcast(BORROWER_PRIVATE_KEY);
+        try centuariCLOB.placeOrder(marketConfig, BORROWER_RATE_1, Side.BORROW, loanAmounts[3], collateralAmounts[3]) {
+            console2.log("Placed borrowing order 1 from BORROWER with rate 5%, amount %d MUSDC, collateral %d MWETH", 
+                loanAmounts[3], collateralAmounts[3]);
+        } catch Error(string memory reason) {
+            console2.log("Failed to place borrowing order 1: %s", reason);
+        } catch (bytes memory) {
+            console2.log("Failed to place borrowing order 1: Unknown error");
+        }
+        vm.stopBroadcast();
         
         // Borrow Order 2 - Rate 4% - will fully match on borrower side but 30% on lender side
         uint256 partialAmount = (loanAmounts[4] * 30) / 100;
@@ -252,41 +252,41 @@ contract MockCentuariCLOBScript is Script {
         }
         vm.stopBroadcast();
         
-        // // Borrow Order 3 - Rate 3% - will remain open
-        // vm.startBroadcast(BORROWER_PRIVATE_KEY);
-        // try centuariCLOB.placeOrder(marketConfig, BORROWER_RATE_3, Side.BORROW, loanAmounts[2], collateralAmounts[2]) {
-        //     console2.log("Placed borrowing order 3 from BORROWER with rate 3%, amount %d MUSDC, collateral %d MWETH", 
-        //         loanAmounts[2], collateralAmounts[2]);
-        // } catch Error(string memory reason) {
-        //     console2.log("Failed to place borrowing order 3: %s", reason);
-        // } catch (bytes memory) {
-        //     console2.log("Failed to place borrowing order 3: Unknown error");
-        // }
-        // vm.stopBroadcast();
+        // Borrow Order 3 - Rate 3% - will remain open
+        vm.startBroadcast(BORROWER_PRIVATE_KEY);
+        try centuariCLOB.placeOrder(marketConfig, BORROWER_RATE_3, Side.BORROW, loanAmounts[2], collateralAmounts[2]) {
+            console2.log("Placed borrowing order 3 from BORROWER with rate 3%, amount %d MUSDC, collateral %d MWETH", 
+                loanAmounts[2], collateralAmounts[2]);
+        } catch Error(string memory reason) {
+            console2.log("Failed to place borrowing order 3: %s", reason);
+        } catch (bytes memory) {
+            console2.log("Failed to place borrowing order 3: Unknown error");
+        }
+        vm.stopBroadcast();
         
-        // // Borrow Order 4 - Rate 2% - will remain open
-        // vm.startBroadcast(BORROWER_PRIVATE_KEY);
-        // try centuariCLOB.placeOrder(marketConfig, BORROWER_RATE_4, Side.BORROW, loanAmounts[1], collateralAmounts[1]) {
-        //     console2.log("Placed borrowing order 4 from BORROWER with rate 2%, amount %d MUSDC, collateral %d MWETH", 
-        //         loanAmounts[1], collateralAmounts[1]);
-        // } catch Error(string memory reason) {
-        //     console2.log("Failed to place borrowing order 4: %s", reason);
-        // } catch (bytes memory) {
-        //     console2.log("Failed to place borrowing order 4: Unknown error");
-        // }
-        // vm.stopBroadcast();
+        // Borrow Order 4 - Rate 2% - will remain open
+        vm.startBroadcast(BORROWER_PRIVATE_KEY);
+        try centuariCLOB.placeOrder(marketConfig, BORROWER_RATE_4, Side.BORROW, loanAmounts[1], collateralAmounts[1]) {
+            console2.log("Placed borrowing order 4 from BORROWER with rate 2%, amount %d MUSDC, collateral %d MWETH", 
+                loanAmounts[1], collateralAmounts[1]);
+        } catch Error(string memory reason) {
+            console2.log("Failed to place borrowing order 4: %s", reason);
+        } catch (bytes memory) {
+            console2.log("Failed to place borrowing order 4: Unknown error");
+        }
+        vm.stopBroadcast();
         
-        // // Borrow Order 5 - Rate 1% - will remain open
-        // vm.startBroadcast(BORROWER_PRIVATE_KEY);
-        // try centuariCLOB.placeOrder(marketConfig, BORROWER_RATE_5, Side.BORROW, loanAmounts[0], collateralAmounts[0]) {
-        //     console2.log("Placed borrowing order 5 from BORROWER with rate 1%, amount %d MUSDC, collateral %d MWETH", 
-        //         loanAmounts[0], collateralAmounts[0]);
-        // } catch Error(string memory reason) {
-        //     console2.log("Failed to place borrowing order 5: %s", reason);
-        // } catch (bytes memory) {
-        //     console2.log("Failed to place borrowing order 5: Unknown error");
-        // }
-        // vm.stopBroadcast();
+        // Borrow Order 5 - Rate 1% - will remain open
+        vm.startBroadcast(BORROWER_PRIVATE_KEY);
+        try centuariCLOB.placeOrder(marketConfig, BORROWER_RATE_5, Side.BORROW, loanAmounts[0], collateralAmounts[0]) {
+            console2.log("Placed borrowing order 5 from BORROWER with rate 1%, amount %d MUSDC, collateral %d MWETH", 
+                loanAmounts[0], collateralAmounts[0]);
+        } catch Error(string memory reason) {
+            console2.log("Failed to place borrowing order 5: %s", reason);
+        } catch (bytes memory) {
+            console2.log("Failed to place borrowing order 5: Unknown error");
+        }
+        vm.stopBroadcast();
     }
     
     function logOrdersStatus() internal view {
