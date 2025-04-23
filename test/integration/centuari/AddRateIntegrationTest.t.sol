@@ -28,12 +28,12 @@ contract AddRateIntegrationTest is BaseTest {
 
         // Expect Rate Added event
         vm.expectEmit(true, false, false, false);
-        emit CentuariEventsLib.RateAdded(RATE);
+        emit CentuariEventsLib.RateAdded(usdcWethMarketConfig.id(), RATE);
 
         // Expect Bond Token Created event
         // We don't know the exact address yet so we use address(0), so we only check the rate
         vm.expectEmit(false, false, false, true);
-        emit CentuariEventsLib.BondTokenCreated(address(0), RATE);
+        emit CentuariEventsLib.BondTokenCreated(usdcWethMarketConfig.id(), address(0), RATE);
 
         // Change caller to Lending CLOB and add rate
         vm.warp(MOCK_TIMESTAMP);

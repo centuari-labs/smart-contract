@@ -83,7 +83,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         dataStore.setBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL, true);
 
         emit CentuariEventsLib.CreateDataStore(
-            address(dataStore), config.loanToken, config.collateralToken, config.maturity
+            marketConfigId, address(dataStore), config.loanToken, config.collateralToken, config.maturity
         );
     }
 
@@ -95,7 +95,9 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
 
         dataStores[config.id()] = dataStore;
 
-        emit CentuariEventsLib.SetDataStore(dataStore, config.loanToken, config.collateralToken, config.maturity);
+        emit CentuariEventsLib.SetDataStore(
+            config.id(), address(dataStore), config.loanToken, config.collateralToken, config.maturity
+        );
     }
 
     function getDataStore(MarketConfig memory config) external view returns (address) {
@@ -196,8 +198,8 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         BondToken bondToken = new BondToken(address(this), bondTokenConfig);
         dataStore.setAddress(CentuariDSLib.getBondTokenAddressKey(rate_), address(bondToken));
 
-        emit CentuariEventsLib.RateAdded(rate_);
-        emit CentuariEventsLib.BondTokenCreated(address(bondToken), rate_);
+        emit CentuariEventsLib.RateAdded(config.id(), rate_);
+        emit CentuariEventsLib.BondTokenCreated(config.id(), address(bondToken), rate_);
     }
 
     function supply(MarketConfig memory config, uint256 rate, address user, uint256 amount)
@@ -228,7 +230,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         // mint tokenized bond to the lender
         BondToken(dataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(rate))).mint(user, shares);
 
-        emit CentuariEventsLib.Supply(user, rate, shares, amount);
+        emit CentuariEventsLib.Supply(config.id(), user, rate, shares, amount);
     }
 
     function borrow(MarketConfig memory config, uint256 rate, address user, uint256 amount)
@@ -262,7 +264,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
 
         if (!_isHealthy(config.id(), rate, user)) revert CentuariErrorsLib.InsufficientCollateral();
 
-        emit CentuariEventsLib.Borrow(user, rate, shares, amount);
+        emit CentuariEventsLib.Borrow(config.id(), user, rate, shares, amount);
     }
 
     function withdraw(MarketConfig memory config, uint256 rate, uint256 shares)
@@ -296,7 +298,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         BondToken(bondTokenAddress).burn(msg.sender, shares);
         IERC20(loanTokenAddress).safeTransfer(msg.sender, amount);
 
-        emit CentuariEventsLib.Withdraw(msg.sender, rate, shares, amount);
+        emit CentuariEventsLib.Withdraw(config.id(), msg.sender, rate, shares, amount);
     }
 
     function supplyCollateral(MarketConfig memory config, uint256 rate, address user, uint256 amount)
@@ -317,7 +319,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
             dataStore.getUint(CentuariDSLib.getUserCollateralKey(rate, user)) + amount
         );
 
-        emit CentuariEventsLib.SupplyCollateral(user, rate, amount);
+        emit CentuariEventsLib.SupplyCollateral(config.id(), user, rate, amount);
     }
 
     function withdrawCollateral(MarketConfig memory config, uint256 rate, uint256 amount)
@@ -340,7 +342,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
 
         IERC20(dataStore.getAddress(CentuariDSLib.COLLATERAL_TOKEN_ADDRESS)).safeTransfer(msg.sender, amount);
 
-        emit CentuariEventsLib.WithdrawCollateral(msg.sender, rate, amount);
+        emit CentuariEventsLib.WithdrawCollateral(config.id(), msg.sender, rate, amount);
     }
 
     function repay(MarketConfig memory config, uint256 rate, uint256 amount)
@@ -369,7 +371,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
             msg.sender, address(this), borrowAmount
         );
 
-        emit CentuariEventsLib.Repay(msg.sender, rate, borrowAmount);
+        emit CentuariEventsLib.Repay(config.id(), msg.sender, rate, borrowAmount);
     }
 
     function liquidate(MarketConfig memory config, uint256 rate, address user)
@@ -402,7 +404,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         //Send collateral to liquidator
         IERC20(dataStore.getAddress(CentuariDSLib.COLLATERAL_TOKEN_ADDRESS)).safeTransfer(msg.sender, userCollateral);
 
-        emit CentuariEventsLib.Liquidate(msg.sender, rate, user, userBorrowShares, userCollateral);
+        emit CentuariEventsLib.Liquidate(config.id(), msg.sender, rate, user, userBorrowShares, userCollateral);
     }
 
     function getUserCollateral(MarketConfig memory config, uint256 rate, address user)

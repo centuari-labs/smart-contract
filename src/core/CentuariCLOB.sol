@@ -70,7 +70,7 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
         CENTUARI.createDataStore(config);
 
         emit CentuariEventsLib.CreateDataStore(
-            address(dataStore), config.loanToken, config.collateralToken, config.maturity
+            marketConfigId, address(dataStore), config.loanToken, config.collateralToken, config.maturity
         );
     }
 
@@ -82,7 +82,9 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
 
         dataStores[config.id()] = dataStore;
 
-        emit CentuariEventsLib.SetDataStore(dataStore, config.loanToken, config.collateralToken, config.maturity);
+        emit CentuariEventsLib.SetDataStore(
+            config.id(), address(dataStore), config.loanToken, config.collateralToken, config.maturity
+        );
     }
 
     function placeOrder(MarketConfig calldata config, uint256 rate, Side side, uint256 amount, uint256 collateralAmount)

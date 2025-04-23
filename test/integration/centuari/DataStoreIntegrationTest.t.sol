@@ -27,7 +27,7 @@ contract DataStoreIntegrationTest is BaseTest {
 
         //Expect CreateDataStore event
         vm.expectEmit(false, false, false, true);
-        emit CentuariEventsLib.CreateDataStore(address(0), config.loanToken, config.collateralToken, config.maturity);
+        emit CentuariEventsLib.CreateDataStore(config.id(), address(0), config.loanToken, config.collateralToken, config.maturity);
 
         ICentuari(centuari).createDataStore(config);
         address dataStore = Centuari(centuari).dataStores(config.id());
@@ -68,7 +68,7 @@ contract DataStoreIntegrationTest is BaseTest {
 
         //Expect SetDataStore event
         vm.expectEmit(true, false, false, false);
-        emit CentuariEventsLib.SetDataStore(newDataStore, config.loanToken, config.collateralToken, config.maturity);
+        emit CentuariEventsLib.SetDataStore(config.id(), newDataStore, config.loanToken, config.collateralToken, config.maturity);
 
         ICentuari(centuari).setDataStore(config, newDataStore);
 
