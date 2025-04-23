@@ -5,7 +5,7 @@ import {Id, Side, Status} from "../../types/CommonTypes.sol";
 
 library CentuariCLOBEventsLib {
     event OrderPlaced(
-        Id indexed id,
+        Id indexed marketId,
         uint256 orderId,
         address indexed trader,
         uint256 amount,
@@ -14,8 +14,8 @@ library CentuariCLOBEventsLib {
         Side side,
         Status status
     );
-    event OrderMatched(Id indexed id, uint256 newOrderId, uint256 oppositeOrderId, uint256 matchedAmount);
-    event OrderCancelled(Id indexed id, uint256 orderId);
-    event MarketLendingRateUpdated(Id indexed id, uint256 rate);
-    event MarketBorrowingRateUpdated(Id indexed id, uint256 rate);
+    event OrderMatched(Id indexed marketId, uint256 newOrderId, uint256 oppositeOrderId, uint256 matchedAmount);
+    event OrderCancelled(Id indexed marketId, uint256 orderId);
+    event MarketLendingRateUpdated(Id indexed marketId, uint256 rate);
+    event MarketBorrowingRateUpdated(Id indexed marketId, uint256 rate);
 }

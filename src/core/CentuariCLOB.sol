@@ -226,7 +226,7 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
         MatchedOrder memory newOrder,
         MatchedOrder memory oppositeOrder,
         uint256 matchedAmount
-    ) internal onlyActiveMarket(config.id()) nonReentrant {
+    ) internal onlyActiveMarket(config.id()) {
         DataStore dataStore = DataStore(dataStores[config.id()]);
 
         CENTUARI.addRate(config, rate);
