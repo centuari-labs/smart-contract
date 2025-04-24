@@ -76,7 +76,7 @@ contract DeployCentuariCore is BaseScript {
             MarketConfig memory marketConfig = MarketConfig({
                 loanToken: address(musdc),
                 collateralToken: address(collaterals[i]),
-                maturity: block.timestamp + 365 days
+                maturity: 1776948836
             });
             centuariCLOB.createDataStore(marketConfig);
             centuari.setLltv(marketConfig, 90e16);
