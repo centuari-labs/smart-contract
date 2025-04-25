@@ -204,13 +204,19 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
             dataStore.setUint(CentuariCLOBDSLib.getOrderStatusKey(newOrder.id), uint256(Status.OPEN));
             OrderQueueLib.appendOrder(dataStore, newOrder.rate, newOrder.side, newOrder.id);
 
-            if (side == Side.LEND && newOrder.rate < CentuariCLOBDSLib.getMarketLendingRate(dataStore)) {
+            if (
+                side == Side.LEND && 
+                (newOrder.rate < CentuariCLOBDSLib.getMarketLendingRate(dataStore) || CentuariCLOBDSLib.getMarketLendingRate(dataStore) == 0)
+            ) {
                 // Update market lending rate
                 CentuariCLOBDSLib.setMarketLendingRate(dataStore, newOrder.rate);
 
                 emit CentuariCLOBEventsLib.MarketLendingRateUpdated(config.id(), newOrder.rate);
             }
-            else if (side == Side.BORROW && newOrder.rate > CentuariCLOBDSLib.getMarketBorrowingRate(dataStore)) {
+            else if (
+                side == Side.BORROW && 
+                newOrder.rate > CentuariCLOBDSLib.getMarketBorrowingRate(dataStore)
+            ) {
                 // Update market borrowing rate
                 CentuariCLOBDSLib.setMarketBorrowingRate(dataStore, newOrder.rate);
 
