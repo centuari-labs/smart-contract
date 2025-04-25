@@ -64,11 +64,11 @@ contract MockCentuariCLOBScript is Script {
         vm.startBroadcast(deployerPrivateKey);
         
         // Initialize contracts from existing deployment
-        centuariCLOB = CentuariCLOB(vm.envAddress("CENTUARI_CLOB_ADDRESS"));
+        centuariCLOB = CentuariCLOB(vm.envAddress("CENTUARI_CLOB"));
         
         // Specifically use MUSDC and MWETH as requested
-        MUSDC_ADDRESS = vm.envAddress("MUSDC_ADDRESS");
-        MWETH_ADDRESS = vm.envAddress("MWETH_ADDRESS");
+        MUSDC_ADDRESS = vm.envAddress("USDC");
+        MWETH_ADDRESS = vm.envAddress("METH");
         
         loanToken = IERC20(MUSDC_ADDRESS);
         collateralToken = IERC20(MWETH_ADDRESS);

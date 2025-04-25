@@ -45,6 +45,7 @@ contract BaseTest is Test {
     uint256 internal constant MATURITY_YEAR = 2025;
     uint8 internal constant DECIMALS = 6;
     uint256 internal constant MOCK_TIMESTAMP = 1000000;
+    uint256 internal constant LLTV = 80e16; // 80% Loan-to-Value ratio
 
     function setUp() public virtual {
         address1 = makeAddr("address1");
@@ -57,6 +58,7 @@ contract BaseTest is Test {
 
         // Deploy mock oracle
         mockOracle = new MockOracle(address(usdc), address(weth));
+        mockOracle.setPrice(2000e6);
 
         // Deploy BondToken
         BondToken.BondTokenConfig memory config = BondToken.BondTokenConfig({
@@ -71,20 +73,32 @@ contract BaseTest is Test {
 
         bondToken = new BondToken(address(this), config);
 
-        //Deploy Centuari
+        // Deploy Centuari
         centuari = new Centuari(address(this));
-        usdcWethMarketConfig =
-            MarketConfig({loanToken: address(usdc), collateralToken: address(weth), maturity: MATURITY});
-        vm.prank(address(centuariCLOB));
-        centuari.createDataStore(usdcWethMarketConfig);
-
-        //Deploy CentuariCLOB
+        
+        // Deploy CentuariCLOB
         centuariCLOB = new CentuariCLOB(address(this), address(centuari));
-
-        //Set CentuariCLOB address for Centuari
+        
+        // Set CentuariCLOB address for Centuari
         centuari.setCentuariCLOB(address(centuariCLOB));
+        
+        // Setup market config
+        usdcWethMarketConfig = MarketConfig({
+            loanToken: address(usdc), 
+            collateralToken: address(weth), 
+            maturity: MATURITY
+        });
+        
+        // Create DataStore for the market
+        centuariCLOB.createDataStore(usdcWethMarketConfig);
+        
+        // Set Oracle for the market
+        centuari.setOracle(usdcWethMarketConfig, address(mockOracle));
+        
+        // Set LLTV (Loan-to-Value ratio) for the market
+        centuari.setLltv(usdcWethMarketConfig, LLTV);
 
-        //Deploy CentuariPrime
+        // Deploy CentuariPrime
         centuariPrime = new CentuariPrime(address(this), address(centuariCLOB), address(centuari));
     }
 }

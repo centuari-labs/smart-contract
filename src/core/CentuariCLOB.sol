@@ -183,8 +183,8 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
             );
 
             // Update amount and collateral amount for new order
-            newOrder.amount -= matchedAmount;
             newOrder.collateralAmount -= (newOrder.collateralAmount * matchedAmount) / newOrder.amount;
+            newOrder.amount -= matchedAmount;
             newOrder.status = (newOrder.amount == 0) ? Status.FILLED : Status.PARTIALLY_FILLED;
 
             // Get next match order

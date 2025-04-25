@@ -9,6 +9,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 // Internal imports - contracts
 import {DataStore} from "./DataStore.sol";
+import {IDataStore} from "../interfaces/IDataStore.sol";
 import {ICentuari} from "../interfaces/ICentuari.sol";
 import {ICentuariCLOB} from "../interfaces/ICentuariCLOB.sol";
 
@@ -161,10 +162,11 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
 
             // Get market data store
             address marketDataStore = CENTUARI.getDataStore(marketConfig);
+            IDataStore dataStore = IDataStore(marketDataStore);
 
             // Get bond token for this rate
             address bondToken =
-                DataStore(marketDataStore).getAddress(CentuariDSLib.getBondTokenAddressKey(supplyQueue[i].rate));
+                CentuariDSLib.getBondTokenAddress(dataStore, supplyQueue[i].rate);
 
             // Get vault's bond token balance
             address curator = DataStore(vault).getAddress(CentuariPrimeDSLib.CURATOR_ADDRESS);
@@ -174,9 +176,9 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             // Calculate value of these bonds
             CENTUARI.accrueInterest(marketConfig, supplyQueue[i].rate);
             uint256 totalMarketSupplyShares =
-                DataStore(marketDataStore).getUint(CentuariDSLib.getTotalSupplySharesKey(supplyQueue[i].rate));
+                CentuariDSLib.getTotalSupplyShares(dataStore, supplyQueue[i].rate);
             uint256 totalMarketSupplyAssets =
-                DataStore(marketDataStore).getUint(CentuariDSLib.getTotalSupplyAssetsKey(supplyQueue[i].rate));
+                CentuariDSLib.getTotalSupplyAssets(dataStore, supplyQueue[i].rate);
 
             if (totalMarketSupplyShares > 0) {
                 uint256 marketValue = (bondBalance * totalMarketSupplyAssets) / totalMarketSupplyShares;
@@ -198,7 +200,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             uint256 rate = supplyQueue[i].rate;
 
             // Get vault balance of the market
-            address marketBondToken = DataStore(CENTUARI.getDataStore(marketConfig)).getAddress(CentuariDSLib.getBondTokenAddressKey(rate));
+            address marketBondToken = CentuariDSLib.getBondTokenAddress(IDataStore(CENTUARI.getDataStore(marketConfig)), rate);
             uint256 vaultBondBalance = IERC20(marketBondToken).balanceOf(curator);
             uint256 cap = supplyQueue[i].cap;
             if (vaultBondBalance >= cap) continue;
@@ -269,7 +271,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             uint256 rate = withdrawQueue[i].rate;
 
             address vaultBondToken =
-                DataStore(CENTUARI.getDataStore(marketConfig)).getAddress(CentuariDSLib.getBondTokenAddressKey(rate));
+                CentuariDSLib.getBondTokenAddress(IDataStore(CENTUARI.getDataStore(marketConfig)), rate);
             address curator = DataStore(vault).getAddress(CentuariPrimeDSLib.CURATOR_ADDRESS);
             uint256 vaultBondBalance = IERC20(vaultBondToken).balanceOf(curator);
             uint256 vaultAssets = CENTUARI.getUserAssetsFromShares(marketConfig, rate, vaultBondBalance);
@@ -324,7 +326,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             if (!marketExists) {
                 DataStore centuariDataStore = DataStore(CENTUARI.getDataStore(previousMarkets[i].marketConfig));
                 address bondToken =
-                    centuariDataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(previousMarkets[i].rate));
+                    CentuariDSLib.getBondTokenAddress(IDataStore(centuariDataStore), previousMarkets[i].rate);
                 if (bondToken != address(0) && IERC20(bondToken).balanceOf(address(vault)) > 0) {
                     revert CentuariPrimeErrorsLib.RemoveMarketNotAllowed(
                         previousMarkets[i].marketConfig.loanToken,
@@ -347,7 +349,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             DataStore centuariDataStore = DataStore(CENTUARI.getDataStore(market.marketConfig));
             if (
                 !centuariDataStore.getBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL)
-                    || centuariDataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(market.rate)) == address(0)
+                    || CentuariDSLib.getBondTokenAddress(IDataStore(centuariDataStore), market.rate) == address(0)
                     || centuariDataStore.getUint(CentuariDSLib.MATURITY_UINT256) <= block.timestamp
                     || vault.getAddress(CentuariPrimeDSLib.TOKEN_ADDRESS)
                         != centuariDataStore.getAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS)
@@ -407,7 +409,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             // Check if market is active
             DataStore centuariDataStore = DataStore(CENTUARI.getDataStore(market.marketConfig));
             if (
-                centuariDataStore.getAddress(CentuariDSLib.getBondTokenAddressKey(market.rate)) == address(0)
+                CentuariDSLib.getBondTokenAddress(IDataStore(centuariDataStore), market.rate) == address(0)
                     || vault.getAddress(CentuariPrimeDSLib.TOKEN_ADDRESS)
                         != centuariDataStore.getAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS)
             ) {

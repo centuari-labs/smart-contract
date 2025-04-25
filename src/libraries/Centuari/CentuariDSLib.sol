@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import {IDataStore} from "../../interfaces/IDataStore.sol";
+
 library CentuariDSLib {
     // Market Config
     bytes32 public constant LOAN_TOKEN_ADDRESS = keccak256("LOAN_TOKEN");
@@ -21,39 +23,75 @@ library CentuariDSLib {
     string public constant BOND_TOKEN_ADDRESS = "BOND_TOKEN";
     string public constant LAST_ACCRUE_UINT256 = "LAST_ACCRUE";
 
-    function getTotalSupplySharesKey(uint256 rate) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(rate, TOTAL_SUPPLY_SHARES_UINT256));
+    function getTotalSupplyShares(IDataStore dataStore, uint256 rate) internal view returns (uint256) {
+        return dataStore.getUint(keccak256(abi.encodePacked(rate, TOTAL_SUPPLY_SHARES_UINT256)));
     }
 
-    function getTotalSupplyAssetsKey(uint256 rate) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(rate, TOTAL_SUPPLY_ASSETS_UINT256));
+    function setTotalSupplyShares(IDataStore dataStore, uint256 rate, uint256 value) internal {
+        dataStore.setUint(keccak256(abi.encodePacked(rate, TOTAL_SUPPLY_SHARES_UINT256)), value);
     }
 
-    function getTotalBorrowSharesKey(uint256 rate) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(rate, TOTAL_BORROW_SHARES_UINT256));
+    function getTotalSupplyAssets(IDataStore dataStore, uint256 rate) internal view returns (uint256) {
+        return dataStore.getUint(keccak256(abi.encodePacked(rate, TOTAL_SUPPLY_ASSETS_UINT256)));
     }
 
-    function getTotalBorrowAssetsKey(uint256 rate) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(rate, TOTAL_BORROW_ASSETS_UINT256));
+    function setTotalSupplyAssets(IDataStore dataStore, uint256 rate, uint256 value) internal {
+        dataStore.setUint(keccak256(abi.encodePacked(rate, TOTAL_SUPPLY_ASSETS_UINT256)), value);
     }
 
-    function getUserBorrowSharesKey(uint256 rate, address user) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(rate, user, USER_BORROW_SHARES_UINT256));
+    function getTotalBorrowShares(IDataStore dataStore, uint256 rate) internal view returns (uint256) {
+        return dataStore.getUint(keccak256(abi.encodePacked(rate, TOTAL_BORROW_SHARES_UINT256)));
     }
 
-    function getUserCollateralKey(uint256 rate, address user) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(rate, user, USER_COLLATERAL_UINT256));
+    function setTotalBorrowShares(IDataStore dataStore, uint256 rate, uint256 value) internal {
+        dataStore.setUint(keccak256(abi.encodePacked(rate, TOTAL_BORROW_SHARES_UINT256)), value);
     }
 
-    function getUserBorrowAssetsKey(uint256 rate, address user) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(rate, user, USER_BORROW_ASSETS_UINT256));
+    function getTotalBorrowAssets(IDataStore dataStore, uint256 rate) internal view returns (uint256) {
+        return dataStore.getUint(keccak256(abi.encodePacked(rate, TOTAL_BORROW_ASSETS_UINT256)));
     }
 
-    function getBondTokenAddressKey(uint256 rate) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(rate, BOND_TOKEN_ADDRESS));
+    function setTotalBorrowAssets(IDataStore dataStore, uint256 rate, uint256 value) internal {
+        dataStore.setUint(keccak256(abi.encodePacked(rate, TOTAL_BORROW_ASSETS_UINT256)), value);
     }
 
-    function getLastAccrueKey(uint256 rate) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(rate, LAST_ACCRUE_UINT256));
+    function getUserBorrowShares(IDataStore dataStore, uint256 rate, address user) internal view returns (uint256) {
+        return dataStore.getUint(keccak256(abi.encodePacked(rate, user, USER_BORROW_SHARES_UINT256)));
+    }
+
+    function setUserBorrowShares(IDataStore dataStore, uint256 rate, address user, uint256 value) internal {
+        dataStore.setUint(keccak256(abi.encodePacked(rate, user, USER_BORROW_SHARES_UINT256)), value);
+    }
+
+    function getUserCollateral(IDataStore dataStore, uint256 rate, address user) internal view returns (uint256) {
+        return dataStore.getUint(keccak256(abi.encodePacked(rate, user, USER_COLLATERAL_UINT256)));
+    }
+
+    function setUserCollateral(IDataStore dataStore, uint256 rate, address user, uint256 value) internal {
+        dataStore.setUint(keccak256(abi.encodePacked(rate, user, USER_COLLATERAL_UINT256)), value);
+    }
+
+    function getUserBorrowAssets(IDataStore dataStore, uint256 rate, address user) internal view returns (uint256) {
+        return dataStore.getUint(keccak256(abi.encodePacked(rate, user, USER_BORROW_ASSETS_UINT256)));
+    }
+
+    function setUserBorrowAssets(IDataStore dataStore, uint256 rate, address user, uint256 value) internal {
+        dataStore.setUint(keccak256(abi.encodePacked(rate, user, USER_BORROW_ASSETS_UINT256)), value);
+    }
+
+    function getBondTokenAddress(IDataStore dataStore, uint256 rate) internal view returns (address) {
+        return dataStore.getAddress(keccak256(abi.encodePacked(rate, BOND_TOKEN_ADDRESS)));
+    }
+
+    function setBondTokenAddress(IDataStore dataStore, uint256 rate, address value) internal {
+        dataStore.setAddress(keccak256(abi.encodePacked(rate, BOND_TOKEN_ADDRESS)), value);
+    }
+
+    function getLastAccrue(IDataStore dataStore, uint256 rate) internal view returns (uint256) {
+        return dataStore.getUint(keccak256(abi.encodePacked(rate, LAST_ACCRUE_UINT256)));
+    }
+
+    function setLastAccrue(IDataStore dataStore, uint256 rate, uint256 value) internal {
+        dataStore.setUint(keccak256(abi.encodePacked(rate, LAST_ACCRUE_UINT256)), value);
     }
 }

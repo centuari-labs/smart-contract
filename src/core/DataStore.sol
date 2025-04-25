@@ -2,8 +2,9 @@
 pragma solidity ^0.8.26;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {IDataStore} from "../interfaces/IDataStore.sol";
 
-contract DataStore is AccessControl {
+contract DataStore is IDataStore, AccessControl {
     // Define roles
     bytes32 public constant CONTROLLER_ROLE = keccak256("CONTROLLER_ROLE");
 
@@ -42,9 +43,8 @@ contract DataStore is AccessControl {
     // @param key the key of the value
     // @param value the value to set
     // @return the bytes value for the key
-    function setBytes(bytes32 key, bytes memory value) external onlyRole(CONTROLLER_ROLE) returns (bytes memory) {
+    function setBytes(bytes32 key, bytes memory value) external onlyRole(CONTROLLER_ROLE) {
         bytesValues[key] = value;
-        return value;
     }
 
     // @dev get the uint value for the given key
@@ -58,15 +58,8 @@ contract DataStore is AccessControl {
     // @param key the key of the value
     // @param value the value to set
     // @return the uint value for the key
-    function setUint(bytes32 key, uint256 value) external onlyRole(CONTROLLER_ROLE) returns (uint256) {
+    function setUint(bytes32 key, uint256 value) external onlyRole(CONTROLLER_ROLE) {
         uintValues[key] = value;
-        return value;
-    }
-
-    // @dev delete the uint value for the given key
-    // @param key the key of the value
-    function removeUint(bytes32 key) external onlyRole(CONTROLLER_ROLE) {
-        delete uintValues[key];
     }
 
     // @dev get the address value for the given key
@@ -80,15 +73,8 @@ contract DataStore is AccessControl {
     // @param key the key of the value
     // @param value the value to set
     // @return the address value for the key
-    function setAddress(bytes32 key, address value) external onlyRole(CONTROLLER_ROLE) returns (address) {
+    function setAddress(bytes32 key, address value) external onlyRole(CONTROLLER_ROLE) {
         addressValues[key] = value;
-        return value;
-    }
-
-    // @dev delete the address value for the given key
-    // @param key the key of the value
-    function removeAddress(bytes32 key) external onlyRole(CONTROLLER_ROLE) {
-        delete addressValues[key];
     }
 
     // @dev get the bool value for the given key
@@ -102,15 +88,8 @@ contract DataStore is AccessControl {
     // @param key the key of the value
     // @param value the value to set
     // @return the bool value for the key
-    function setBool(bytes32 key, bool value) external onlyRole(CONTROLLER_ROLE) returns (bool) {
+    function setBool(bytes32 key, bool value) external onlyRole(CONTROLLER_ROLE) {
         boolValues[key] = value;
-        return value;
-    }
-
-    // @dev delete the bool value for the given key
-    // @param key the key of the value
-    function removeBool(bytes32 key) external onlyRole(CONTROLLER_ROLE) {
-        delete boolValues[key];
     }
 
     // @dev get the string value for the given key
@@ -124,14 +103,7 @@ contract DataStore is AccessControl {
     // @param key the key of the value
     // @param value the value to set
     // @return the string value for the key
-    function setString(bytes32 key, string memory value) external onlyRole(CONTROLLER_ROLE) returns (string memory) {
+    function setString(bytes32 key, string memory value) external onlyRole(CONTROLLER_ROLE) {
         stringValues[key] = value;
-        return value;
-    }
-
-    // @dev delete the string value for the given key
-    // @param key the key of the value
-    function removeString(bytes32 key) external onlyRole(CONTROLLER_ROLE) {
-        delete stringValues[key];
     }
 }
