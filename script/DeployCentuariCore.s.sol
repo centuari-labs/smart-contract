@@ -28,6 +28,10 @@ contract DeployCentuariCore is BaseScript {
         CentuariPrime centuariPrime = new CentuariPrime(deployer, address(centuariCLOB), address(centuari));
         console2.log("CentuariPrime deployed at: %s", address(centuariPrime));
 
+        //Set CentuariPrime for CentuariCLOB
+        centuariCLOB.setCentuariPrime(address(centuariPrime));
+        console2.log("CentuariCLOB set CentuariPrime");
+
         //Deploy Mock Oracles
         MockOracle[5] memory oracles;
         MockToken musdc = MockToken(vm.envAddress("MUSDC"));
