@@ -14,6 +14,7 @@ contract DeployDataOrder is BaseDeployData {
     using MarketConfigLib for MarketConfig;
 
     function _deployImplementation() internal override {
+        vm.stopBroadcast();
         console2.log(unicode"\n📊 Starting Order Placement");
         // Process each collateral
         for (uint256 i = 0; i < collaterals.length; i++) {
@@ -47,6 +48,7 @@ contract DeployDataOrder is BaseDeployData {
             }
         }
         console2.log(unicode"\n✅ Mock Market Data Generation Complete!");
+        vm.startBroadcast(deployerKey);
     }
     
     function generateRandomParameters(
