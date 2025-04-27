@@ -4,24 +4,15 @@ pragma solidity ^0.8.26;
 import {console2} from "forge-std/Script.sol";
 import {CentuariPrime} from "../../src/core/CentuariPrime.sol";
 import {DataStore} from "../../src/core/DataStore.sol";
-import {BaseScript} from "../BaseScript.s.sol";
+import {BaseDeployData} from "../DeployData/BaseDeployData.s.sol";
 import {MockToken} from "../../src/mocks/MockToken.sol";
 import {VaultConfig, VaultMarketSupplyConfig, VaultMarketWithdrawConfig, MarketConfig} from "../../src/types/CommonTypes.sol";
-contract MockCentuariPrimeScript is BaseScript {
+
+contract MockCentuariPrimeScript is BaseDeployData {
     function _deployImplementation() internal override {
-        uint256 CENTUARI_PRIME_USER_PRIVATE_KEY = vm.envUint("CENTUARI_PRIME_USER_PRIVATE_KEY");
+        console2.log(unicode"\n📊 Starting Centuari Prime Data Generation");
 
-        CentuariPrime centuariPrime = CentuariPrime(vm.envAddress("CENTUARI_PRIME"));
-
-        MockToken musdc = MockToken(vm.envAddress("USDC"));
-        MockToken[5] memory collaterals = [
-            MockToken(vm.envAddress("METH")),
-            MockToken(vm.envAddress("MBTC")),
-            MockToken(vm.envAddress("MSOL")),
-            MockToken(vm.envAddress("MLINK")),
-            MockToken(vm.envAddress("MAAVE"))
-        ];
-
+        vm.startBroadcast(deployerKey);
         //Create Vault for Centuari Prime
         for (uint256 i = 0; i < 5; i++) {
             centuariPrime.createVault(VaultConfig({
@@ -41,7 +32,7 @@ contract MockCentuariPrimeScript is BaseScript {
                     marketConfig: MarketConfig({
                         loanToken: address(musdc),
                         collateralToken: address(collaterals[j]),
-                        maturity: 1776948836
+                        maturity: maturities[0]
                     }),
                     rate: rate_,
                     cap: 1000000e6
@@ -51,7 +42,7 @@ contract MockCentuariPrimeScript is BaseScript {
                     marketConfig: MarketConfig({
                         loanToken: address(musdc),
                         collateralToken: address(collaterals[j]),
-                        maturity: 1776948836
+                        maturity: maturities[0]
                     }),
                     rate: rate_
                 });
@@ -71,7 +62,7 @@ contract MockCentuariPrimeScript is BaseScript {
         }
         vm.stopBroadcast();
 
-        vm.startBroadcast(CENTUARI_PRIME_USER_PRIVATE_KEY);
+        vm.startBroadcast(lenderKey);
         // Deposit to each vault
         for (uint256 i = 0; i < 5; i++) {
             musdc.approve(address(centuariPrime), 2000e6);
@@ -81,5 +72,7 @@ contract MockCentuariPrimeScript is BaseScript {
                 name: string.concat("Vault ", musdc.symbol(), " ", vm.toString(i+1))
             }), 2000e6); 
         }
+        vm.stopBroadcast();
+        console2.log(unicode"\n✅ Centuari Prime Data Generation Complete!");
     }
 }
