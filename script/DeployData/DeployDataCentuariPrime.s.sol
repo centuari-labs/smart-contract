@@ -12,7 +12,6 @@ contract DeployDataCentuariPrime is BaseDeployData {
     function _deployImplementation() internal override {
         console2.log(unicode"\n📊 Starting Centuari Prime Data Generation");
 
-        vm.startBroadcast(deployerKey);
         //Create Vault for Centuari Prime
         for (uint256 i = 0; i < 5; i++) {
             centuariPrime.createVault(VaultConfig({
@@ -60,9 +59,9 @@ contract DeployDataCentuariPrime is BaseDeployData {
                 name: string.concat("Vault ", musdc.symbol(), " ", vm.toString(i+1))
             }), withdrawQueue);
         }
-        vm.stopBroadcast();
+        vm.stopBroadcast(); //Stop broadcast for deployer
 
-        vm.startBroadcast(lenderKey);
+        vm.startBroadcast(lenderKey); //Start broadcast for lender
         // Deposit to each vault
         for (uint256 i = 0; i < 5; i++) {
             musdc.approve(address(centuariPrime), 2000e6);
@@ -72,7 +71,6 @@ contract DeployDataCentuariPrime is BaseDeployData {
                 name: string.concat("Vault ", musdc.symbol(), " ", vm.toString(i+1))
             }), 2000e6); 
         }
-        vm.stopBroadcast();
         console2.log(unicode"\n✅ Centuari Prime Data Generation Complete!");
     }
 }
