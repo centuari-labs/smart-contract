@@ -10,11 +10,11 @@ contract DeployMockToken is BaseScript {
     function _deployImplementation() internal override {
         MockToken[6] memory mockTokens = [
             new MockToken("Mock USDC", "MUSDC", 6), //USDC
-            new MockToken("Mock WETH", "MWETH", 18), // WETH
-            new MockToken("Mock WBTC", "MWBTC", 8), // WBTC
-            new MockToken("Mock WSOL", "MWSOL", 18), // SOL
-            new MockToken("Mock WLINK", "MWLINK", 18), // LINK
-            new MockToken("Mock WAAVE", "MWAAVE", 18) // AAVE
+            new MockToken("Mock WETH", "METH", 18), // WETH
+            new MockToken("Mock WBTC", "MBTC", 8), // WBTC
+            new MockToken("Mock WSOL", "MSOL", 18), // SOL
+            new MockToken("Mock WLINK", "MLINK", 18), // LINK
+            new MockToken("Mock WAAVE", "MAAVE", 18) // AAVE
         ];
 
         for (uint256 i = 0; i < mockTokens.length; i++) {
@@ -23,7 +23,7 @@ contract DeployMockToken is BaseScript {
 
         string memory deployedMockTokens = string.concat(
             "\n# Deployed Mock Token contract addresses\n",
-            "USDC=",
+            "MUSDC=",
             vm.toString(address(mockTokens[0])),
             "\n",
             "METH=",

@@ -6,14 +6,14 @@ import {Script, console2} from "forge-std/Script.sol";
 abstract contract BaseScript is Script {
     // Common configuration variables
     address deployer;
-    uint256 deployerPrivateKey;
+    uint256 deployerKey;
     string rpcUrl;
 
     // Setup method to run before each deployment
     function setUp() public virtual {
         // Load private key from environment
-        deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
-        deployer = vm.addr(deployerPrivateKey);
+        deployerKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+        deployer = vm.addr(deployerKey);
 
         //RPC URL
         rpcUrl = vm.envString("RPC_URL");
@@ -29,7 +29,7 @@ abstract contract BaseScript is Script {
     // Common deployment logic using the template method pattern
     function _deploy() internal {
         // Pre-deployment setup
-        vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast(deployerKey);
 
         // Call the child's implementation
         _deployImplementation();

@@ -30,7 +30,7 @@ contract DeployCentuariCore is BaseScript {
 
         //Deploy Mock Oracles
         MockOracle[5] memory oracles;
-        MockToken musdc = MockToken(vm.envAddress("USDC"));
+        MockToken musdc = MockToken(vm.envAddress("MUSDC"));
         MockToken[5] memory collaterals = [
             MockToken(vm.envAddress("METH")),
             MockToken(vm.envAddress("MBTC")),
@@ -53,44 +53,23 @@ contract DeployCentuariCore is BaseScript {
 
         string memory deployedOracles = string.concat(
             "\n# Deployed Mock Oracles\n",
-            "METH=",
+            "METH_ORACLE=",
             vm.toString(address(oracles[0])),
             "\n",
-            "MBTC=",
+            "MBTC_ORACLE=",
             vm.toString(address(oracles[1])),
             "\n",
-            "MSOL=",
+            "MSOL_ORACLE=",
             vm.toString(address(oracles[2])),
             "\n",
-            "MLINK=",
+            "MLINK_ORACLE=",
             vm.toString(address(oracles[3])),
             "\n",
-            "MAAVE=",
+            "MAAVE_ORACLE=",
             vm.toString(address(oracles[4])),
             "\n"
         );
         vm.writeFile(".env", string.concat(vm.readFile(".env"), deployedOracles));
-
-        //Create Market for CLOB and Centuari
-        for (uint256 i = 0; i < collaterals.length; i++) {
-            MarketConfig memory marketConfig = MarketConfig({
-                loanToken: address(musdc),
-                collateralToken: address(collaterals[i]),
-                maturity: 1776948836
-            });
-            centuariCLOB.createDataStore(marketConfig);
-            centuari.setLltv(marketConfig, 90e16);
-            centuari.setOracle(marketConfig, address(oracles[i]));
-        }
-
-        //Create Vault for Centuari Prime
-        for (uint256 i = 0; i < collaterals.length; i++) {
-            centuariPrime.createVault(VaultConfig({
-                curator: deployer,
-                token: address(collaterals[i]),
-                name: string.concat("Vault ", collaterals[i].symbol())
-            }));
-        }
 
         string memory deployedCentuariCore = string.concat(
             "\n# Deployed Centuari Core contract addresses\n",

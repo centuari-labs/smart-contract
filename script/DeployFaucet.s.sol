@@ -9,7 +9,7 @@ import {console2} from "forge-std/Script.sol";
 contract DeployFaucet is BaseScript {
     function _deployImplementation() internal override {
         MockToken[6] memory mockTokens = [
-            MockToken(vm.envAddress("USDC")),
+            MockToken(vm.envAddress("MUSDC")),
             MockToken(vm.envAddress("METH")),
             MockToken(vm.envAddress("MBTC")),
             MockToken(vm.envAddress("MSOL")),
