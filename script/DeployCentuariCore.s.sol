@@ -28,6 +28,10 @@ contract DeployCentuariCore is BaseScript {
         CentuariPrime centuariPrime = new CentuariPrime(deployer, address(centuariCLOB), address(centuari));
         console2.log("CentuariPrime deployed at: %s", address(centuariPrime));
 
+        //Set CentuariPrime for CentuariCLOB
+        centuariCLOB.setCentuariPrime(address(centuariPrime));
+        console2.log("CentuariCLOB set CentuariPrime");
+
         //Deploy Mock Oracles
         MockOracle[5] memory oracles;
         MockToken musdc = MockToken(vm.envAddress("USDC"));
@@ -81,15 +85,6 @@ contract DeployCentuariCore is BaseScript {
             centuariCLOB.createDataStore(marketConfig);
             centuari.setLltv(marketConfig, 90e16);
             centuari.setOracle(marketConfig, address(oracles[i]));
-        }
-
-        //Create Vault for Centuari Prime
-        for (uint256 i = 0; i < collaterals.length; i++) {
-            centuariPrime.createVault(VaultConfig({
-                curator: deployer,
-                token: address(collaterals[i]),
-                name: string.concat("Vault ", collaterals[i].symbol())
-            }));
         }
 
         string memory deployedCentuariCore = string.concat(

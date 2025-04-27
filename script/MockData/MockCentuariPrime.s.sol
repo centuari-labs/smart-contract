@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
+import {console2} from "forge-std/Script.sol";
 import {CentuariPrime} from "../../src/core/CentuariPrime.sol";
 import {DataStore} from "../../src/core/DataStore.sol";
 import {BaseScript} from "../BaseScript.s.sol";
@@ -35,13 +36,14 @@ contract MockCentuariPrimeScript is BaseScript {
             VaultMarketSupplyConfig[] memory supplyQueue = new VaultMarketSupplyConfig[](5);
             VaultMarketWithdrawConfig[] memory withdrawQueue = new VaultMarketWithdrawConfig[](5);
             for (uint256 j = 0; j < 5; j++) {
+                uint256 rate_ = (j+1) * 1e16;
                 supplyQueue[j] = VaultMarketSupplyConfig({
                     marketConfig: MarketConfig({
                         loanToken: address(musdc),
                         collateralToken: address(collaterals[j]),
                         maturity: 1776948836
                     }),
-                    rate: j * 1e16,
+                    rate: rate_,
                     cap: 1000000e6
                 });
 
@@ -51,7 +53,7 @@ contract MockCentuariPrimeScript is BaseScript {
                         collateralToken: address(collaterals[j]),
                         maturity: 1776948836
                     }),
-                    rate: j * 1e16
+                    rate: rate_
                 });
             }
 
@@ -67,6 +69,7 @@ contract MockCentuariPrimeScript is BaseScript {
                 name: string.concat("Vault ", musdc.symbol(), " ", vm.toString(i+1))
             }), withdrawQueue);
         }
+        vm.stopBroadcast();
 
         vm.startBroadcast(CENTUARI_PRIME_USER_PRIVATE_KEY);
         // Deposit to each vault
@@ -78,6 +81,5 @@ contract MockCentuariPrimeScript is BaseScript {
                 name: string.concat("Vault ", musdc.symbol(), " ", vm.toString(i+1))
             }), 2000e6); 
         }
-        vm.stopBroadcast();
     }
 }

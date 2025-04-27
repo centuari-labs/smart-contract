@@ -80,7 +80,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         vault.setString(CentuariPrimeDSLib.NAME_STRING, config.name);
         vault.setBool(CentuariPrimeDSLib.IS_ACTIVE_BOOL, true);
 
-        CentuariPrimeToken centuariPrimeToken = new CentuariPrimeToken(config.curator, config.name);
+        CentuariPrimeToken centuariPrimeToken = new CentuariPrimeToken(address(this), config.name);
         vault.setAddress(CentuariPrimeDSLib.CENTUARI_PRIME_TOKEN_ADDRESS, address(centuariPrimeToken));
 
         emit CentuariPrimeEventsLib.CreateVault(msg.sender, address(vault), config.token, config.name);
@@ -201,7 +201,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
 
             // Get vault balance of the market
             address marketBondToken = CentuariDSLib.getBondTokenAddress(IDataStore(CENTUARI.getDataStore(marketConfig)), rate);
-            uint256 vaultBondBalance = IERC20(marketBondToken).balanceOf(curator);
+            uint256 vaultBondBalance = marketBondToken == address(0) ? 0 : IERC20(marketBondToken).balanceOf(curator);
             uint256 cap = supplyQueue[i].cap;
             if (vaultBondBalance >= cap) continue;
 

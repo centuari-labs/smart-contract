@@ -23,6 +23,7 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
     mapping(Id => address) public dataStores;
     mapping(address => Order[]) public traderOrders;
     ICentuari public CENTUARI;
+    address public centuariPrime;
     address public centuariAlpha;
 
     modifier onlyActiveMarket(Id id) {
@@ -45,6 +46,10 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
 
     function setCentuari(address centuari_) external onlyOwner {
         CENTUARI = ICentuari(centuari_);
+    }
+
+    function setCentuariPrime(address centuariPrime_) external onlyOwner {
+        centuariPrime = centuariPrime_;
     }
 
     function setCentuariAlpha(address centuariAlpha_) external onlyOwner {
@@ -115,12 +120,14 @@ contract CentuariCLOB is ICentuariCLOB, Ownable, ReentrancyGuard {
         // ---------------------------
         // 1. Transfer tokens to Centuari
         // ---------------------------
-        if (side == Side.LEND) {
-            // LEND => deposit debtToken
-            IERC20(config.loanToken).transferFrom(msg.sender, address(CENTUARI), amount);
-        } else if (side == Side.BORROW) {
-            // BORROW => deposit collateralToken
-            IERC20(config.collateralToken).transferFrom(msg.sender, address(CENTUARI), collateralAmount);
+        if(msg.sender != centuariPrime) {
+            if (side == Side.LEND) {
+                // LEND => deposit debtToken
+                IERC20(config.loanToken).transferFrom(msg.sender, address(CENTUARI), amount);
+            } else if (side == Side.BORROW) {
+                // BORROW => deposit collateralToken
+                IERC20(config.collateralToken).transferFrom(msg.sender, address(CENTUARI), collateralAmount);
+            }
         }
 
         // ---------------------------
