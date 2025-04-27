@@ -8,7 +8,7 @@ import {BaseDeployData} from "../DeployData/BaseDeployData.s.sol";
 import {MockToken} from "../../src/mocks/MockToken.sol";
 import {VaultConfig, VaultMarketSupplyConfig, VaultMarketWithdrawConfig, MarketConfig} from "../../src/types/CommonTypes.sol";
 
-contract MockCentuariPrimeScript is BaseDeployData {
+contract DeployDataCentuariPrime is BaseDeployData {
     function _deployImplementation() internal override {
         console2.log(unicode"\n📊 Starting Centuari Prime Data Generation");
 
