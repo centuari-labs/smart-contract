@@ -305,35 +305,37 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
 
         // Check if the vault still has tokens in markets that are being removed
         bytes memory previousMarketBytes = vault.getBytes(CentuariPrimeDSLib.SUPPLY_QUEUE_BYTES);
-        VaultMarketSupplyConfig[] memory previousMarkets = abi.decode(previousMarketBytes, (VaultMarketSupplyConfig[]));
+        if (previousMarketBytes.length > 0) {
+            VaultMarketSupplyConfig[] memory previousMarkets = abi.decode(previousMarketBytes, (VaultMarketSupplyConfig[]));
 
-        // For each previous market, check if it exists in the new supply queue
-        for (uint256 i = 0; i < previousMarkets.length; i++) {
-            bool marketExists = false;
+            // For each previous market, check if it exists in the new supply queue
+            for (uint256 i = 0; i < previousMarkets.length; i++) {
+                bool marketExists = false;
 
-            // Check if this market+rate combination exists in the new supply queue
-            for (uint256 j = 0; j < supplyQueue.length; j++) {
-                if (
-                    Id.unwrap(previousMarkets[i].marketConfig.id()) == Id.unwrap(supplyQueue[j].marketConfig.id())
-                        && previousMarkets[i].rate == supplyQueue[j].rate
-                ) {
-                    marketExists = true;
-                    break;
+                // Check if this market+rate combination exists in the new supply queue
+                for (uint256 j = 0; j < supplyQueue.length; j++) {
+                    if (
+                        Id.unwrap(previousMarkets[i].marketConfig.id()) == Id.unwrap(supplyQueue[j].marketConfig.id())
+                            && previousMarkets[i].rate == supplyQueue[j].rate
+                    ) {
+                        marketExists = true;
+                        break;
+                    }
                 }
-            }
 
-            // If the market is being removed, check if it still has tokens
-            if (!marketExists) {
-                DataStore centuariDataStore = DataStore(CENTUARI.getDataStore(previousMarkets[i].marketConfig));
-                address bondToken =
-                    CentuariDSLib.getBondTokenAddress(IDataStore(centuariDataStore), previousMarkets[i].rate);
-                if (bondToken != address(0) && IERC20(bondToken).balanceOf(address(vault)) > 0) {
-                    revert CentuariPrimeErrorsLib.RemoveMarketNotAllowed(
-                        previousMarkets[i].marketConfig.loanToken,
-                        previousMarkets[i].marketConfig.collateralToken,
-                        previousMarkets[i].marketConfig.maturity,
-                        previousMarkets[i].rate
-                    );
+                // If the market is being removed, check if it still has tokens
+                if (!marketExists) {
+                    DataStore centuariDataStore = DataStore(CENTUARI.getDataStore(previousMarkets[i].marketConfig));
+                    address bondToken =
+                        CentuariDSLib.getBondTokenAddress(IDataStore(centuariDataStore), previousMarkets[i].rate);
+                    if (bondToken != address(0) && IERC20(bondToken).balanceOf(address(vault)) > 0) {
+                        revert CentuariPrimeErrorsLib.RemoveMarketNotAllowed(
+                            previousMarkets[i].marketConfig.loanToken,
+                            previousMarkets[i].marketConfig.collateralToken,
+                            previousMarkets[i].marketConfig.maturity,
+                            previousMarkets[i].rate
+                        );
+                    }
                 }
             }
         }
@@ -349,7 +351,6 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             DataStore centuariDataStore = DataStore(CENTUARI.getDataStore(market.marketConfig));
             if (
                 !centuariDataStore.getBool(CentuariDSLib.IS_MARKET_ACTIVE_BOOL)
-                    || CentuariDSLib.getBondTokenAddress(IDataStore(centuariDataStore), market.rate) == address(0)
                     || centuariDataStore.getUint(CentuariDSLib.MATURITY_UINT256) <= block.timestamp
                     || vault.getAddress(CentuariPrimeDSLib.TOKEN_ADDRESS)
                         != centuariDataStore.getAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS)
@@ -406,12 +407,9 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         for (uint256 i = 0; i < withdrawQueue.length; i++) {
             VaultMarketWithdrawConfig memory market = withdrawQueue[i];
 
-            // Check if market is active
+            // Check if market is valid
             DataStore centuariDataStore = DataStore(CENTUARI.getDataStore(market.marketConfig));
-            if (
-                CentuariDSLib.getBondTokenAddress(IDataStore(centuariDataStore), market.rate) == address(0)
-                    || vault.getAddress(CentuariPrimeDSLib.TOKEN_ADDRESS)
-                        != centuariDataStore.getAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS)
+            if (vault.getAddress(CentuariPrimeDSLib.TOKEN_ADDRESS) != centuariDataStore.getAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS)
             ) {
                 revert CentuariPrimeErrorsLib.InvalidMarket(
                     market.marketConfig.loanToken,
