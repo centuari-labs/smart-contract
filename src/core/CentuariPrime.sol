@@ -385,11 +385,13 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             // Add to seen markets
             seenMarkets[seenCount] = marketKey;
             seenCount++;
+            
+            // Emit event for each market
+            emit CentuariPrimeEventsLib.SetSupplyQueue(msg.sender, address(vault), i, supplyQueue[i]);
         }
 
         // Set the supply queue
         vault.setBytes(CentuariPrimeDSLib.SUPPLY_QUEUE_BYTES, abi.encode(supplyQueue));
-        emit CentuariPrimeEventsLib.SetSupplyQueue(msg.sender, address(vault), supplyQueue);
     }
 
     function setWithdrawQueue(VaultConfig memory config, VaultMarketWithdrawConfig[] memory withdrawQueue)
@@ -436,11 +438,13 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             // Add to seen markets
             seenMarkets[seenCount] = marketKey;
             seenCount++;
+
+            // Emit event for each market
+            emit CentuariPrimeEventsLib.SetWithdrawQueue(msg.sender, address(vault), i, withdrawQueue[i]);
         }
 
         // Set the withdraw queue
         vault.setBytes(CentuariPrimeDSLib.WITHDRAW_QUEUE_BYTES, abi.encode(withdrawQueue));
-        emit CentuariPrimeEventsLib.SetWithdrawQueue(msg.sender, address(vault), withdrawQueue);
     }
 
     function reallocate() external {
