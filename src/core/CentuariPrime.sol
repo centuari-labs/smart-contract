@@ -387,7 +387,16 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             seenCount++;
             
             // Emit event for each market
-            emit CentuariPrimeEventsLib.SetSupplyQueue(msg.sender, address(vault), i, supplyQueue[i]);
+            emit CentuariPrimeEventsLib.SetSupplyQueue(
+                msg.sender, address(vault), 
+                i, 
+                supplyQueue[i].marketConfig.id(), 
+                supplyQueue[i].marketConfig.loanToken, 
+                supplyQueue[i].marketConfig.collateralToken, 
+                supplyQueue[i].marketConfig.maturity, 
+                supplyQueue[i].rate, 
+                supplyQueue[i].cap
+            );
         }
 
         // Set the supply queue
@@ -440,7 +449,16 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             seenCount++;
 
             // Emit event for each market
-            emit CentuariPrimeEventsLib.SetWithdrawQueue(msg.sender, address(vault), i, withdrawQueue[i]);
+            emit CentuariPrimeEventsLib.SetWithdrawQueue(
+                msg.sender, 
+                address(vault), 
+                i, 
+                withdrawQueue[i].marketConfig.id(), 
+                withdrawQueue[i].marketConfig.loanToken, 
+                withdrawQueue[i].marketConfig.collateralToken, 
+                withdrawQueue[i].marketConfig.maturity, 
+                withdrawQueue[i].rate
+            );
         }
 
         // Set the withdraw queue
