@@ -28,4 +28,5 @@ library CentuariPrimeEventsLib {
         uint256 maturity, 
         uint256 rate
     );
+    event CentuariPrimeTokenCreated(address indexed vault, address indexed token, string symbol, string name);
 }

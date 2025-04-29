@@ -84,6 +84,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         vault.setAddress(CentuariPrimeDSLib.CENTUARI_PRIME_TOKEN_ADDRESS, address(centuariPrimeToken));
 
         emit CentuariPrimeEventsLib.CreateVault(msg.sender, address(vault), config.token, config.name);
+        emit CentuariPrimeEventsLib.CentuariPrimeTokenCreated(address(vault), address(centuariPrimeToken), centuariPrimeToken.symbol(), centuariPrimeToken.name());
     }
 
     function deposit(VaultConfig memory config, uint256 amount)
