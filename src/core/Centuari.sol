@@ -187,8 +187,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
             rate: rate_,
             maturity: config.maturity,
             maturityMonth: DateLib.getMonth(config.maturity),
-            maturityYear: DateLib.getYear(config.maturity),
-            decimals: IERC20Metadata(config.loanToken).decimals()
+            maturityYear: DateLib.getYear(config.maturity)
         });
         BondToken bondToken = new BondToken(address(this), bondTokenConfig);
         CentuariDSLib.setBondTokenAddress(dataStore, rate_, address(bondToken));

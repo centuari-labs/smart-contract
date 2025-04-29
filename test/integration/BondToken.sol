@@ -32,8 +32,7 @@ contract BondTokenTest_Base is Test {
             rate: 45e16,
             maturity: 1715280000,
             maturityMonth: "MAY",
-            maturityYear: 2025,
-            decimals: IERC20Metadata(loanToken).decimals()
+            maturityYear: 2025
         });
 
         bondToken = new BondToken(
@@ -60,8 +59,7 @@ contract BondTokenTest_Constructor is BondTokenTest_Base {
             uint256 rate_,
             uint256 maturity_,
             string memory maturityMonth_,
-            uint256 maturityYear_,
-            uint256 decimals_
+            uint256 maturityYear_
         ) = bondToken.config();
 
         assertEq(loanToken_, loanToken, "Incorrect loan token address");
@@ -70,7 +68,6 @@ contract BondTokenTest_Constructor is BondTokenTest_Base {
         assertEq(maturity_, 1715280000, "Incorrect maturity timestamp");
         assertEq(maturityMonth_, "MAY", "Incorrect maturity month");
         assertEq(maturityYear_, 2025, "Incorrect maturity year");
-        assertEq(decimals_, 6, "Incorrect decimals");
     }
 }
 

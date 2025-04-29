@@ -67,8 +67,7 @@ contract BaseTest is Test {
             rate: RATE,
             maturity: MATURITY,
             maturityMonth: MATURITY_MONTH,
-            maturityYear: MATURITY_YEAR,
-            decimals: usdc.decimals()
+            maturityYear: MATURITY_YEAR
         });
 
         bondToken = new BondToken(address(this), config);

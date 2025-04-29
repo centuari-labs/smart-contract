@@ -36,7 +36,6 @@ contract BondToken is Ownable, ERC20 {
         uint256 maturity;
         string maturityMonth;
         uint256 maturityYear;
-        uint256 decimals;
     }
 
     /// @notice Information about the current Centuari token instance
@@ -52,7 +51,7 @@ contract BondToken is Ownable, ERC20 {
         ERC20(
             string(
                 abi.encodePacked(
-                    "CTI ",
+                    "CENT ",
                     IERC20Metadata(config_.loanToken).symbol(),
                     "/",
                     IERC20Metadata(config_.collateralToken).symbol(),
@@ -67,7 +66,7 @@ contract BondToken is Ownable, ERC20 {
             ),
             string(
                 abi.encodePacked(
-                    "poc",
+                    "cent",
                     IERC20Metadata(config_.loanToken).symbol(),
                     IERC20Metadata(config_.collateralToken).symbol(),
                     (config_.rate / 1e14).toString(),
@@ -102,5 +101,12 @@ contract BondToken is Ownable, ERC20 {
     /// @param amount_ The amount of tokens to burn
     function burn(address from_, uint256 amount_) external onlyOwner {
         _burn(from_, amount_);
+    }
+
+    /// @notice Returns the number of decimals for the token
+    /// @dev Overrides the ERC20 decimals function to return the configured decimals
+    /// @return The number of decimals for the token
+    function decimals() public view override returns (uint8) {
+        return IERC20Metadata(config.loanToken).decimals();
     }
 }
