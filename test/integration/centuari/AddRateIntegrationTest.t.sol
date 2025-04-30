@@ -10,7 +10,7 @@
 // import {CentuariDSLib} from "../../../src/libraries/Centuari/CentuariDSLib.sol";
 // import {CentuariErrorsLib} from "../../../src/libraries/Centuari/CentuariErrorsLib.sol";
 // import {CentuariEventsLib} from "../../../src/libraries/Centuari/CentuariEventsLib.sol";
-// import {BondToken} from "../../../src/core/BondToken.sol";
+// import {CentuariToken} from "../../../src/core/CentuariToken.sol";
 // import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 // import {console} from "forge-std/Test.sol";
 
@@ -33,7 +33,7 @@
 //         // Expect Bond Token Created event
 //         // We don't know the exact address yet so we use address(0), so we only check the rate
 //         vm.expectEmit(false, false, false, true);
-//         emit CentuariEventsLib.BondTokenCreated(usdcWethMarketConfig.id(), address(0), RATE);
+//         emit CentuariEventsLib.CentuariTokenCreated(usdcWethMarketConfig.id(), address(0), RATE);
 
 //         // Change caller to Lending CLOB and add rate
 //         vm.warp(MOCK_TIMESTAMP);
@@ -44,11 +44,11 @@
 //         assertEq(lastAccrueTimestamp, MOCK_TIMESTAMP);
 
 //         // Get the bond token address
-//         address bondTokenAddress = DataStore(dataStore).getAddress(CentuariDSLib.getBondTokenAddressKey(RATE));
-//         assertTrue(bondTokenAddress != address(0), "Bond token not created");
+//         address centuariTokenAddress = DataStore(dataStore).getAddress(CentuariDSLib.getCentuariTokenAddressKey(RATE));
+//         assertTrue(centuariTokenAddress != address(0), "Bond token not created");
 
 //         // Check bond token configuration
-//         BondToken addRateBondToken = BondToken(bondTokenAddress);
+//         CentuariToken addRateCentuariToken = CentuariToken(centuariTokenAddress);
 //         (
 //             address loanToken,
 //             address collateralToken,
@@ -57,7 +57,7 @@
 //             string memory maturityMonth,
 //             uint256 maturityYear,
 //             uint256 decimals
-//         ) = addRateBondToken.config();
+//         ) = addRateCentuariToken.config();
 //         assertEq(loanToken, address(usdc), "Incorrect loan token");
 //         assertEq(collateralToken, address(weth), "Incorrect collateral token");
 //         assertEq(rate, RATE, "Incorrect rate");

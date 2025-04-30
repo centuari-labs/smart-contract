@@ -19,6 +19,6 @@ library CentuariEventsLib {
         Id indexed marketId, address indexed liquidator, uint256 rate, address indexed user, uint256 borrowShares, uint256 collateral
     );
     event RateAdded(Id indexed marketId, uint256 rate);
-    event BondTokenCreated(Id indexed marketId, address indexed bondToken, uint256 rate);
+    event CentuariTokenCreated(Id indexed marketId, address indexed centuariToken, uint256 rate);
     event TransferFrom(Id indexed marketId, address indexed token, address from, address to, uint256 amount);
 }

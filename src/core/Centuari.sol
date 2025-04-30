@@ -24,7 +24,7 @@ import {CentuariEventsLib} from "../libraries/Centuari/CentuariEventsLib.sol";
 import {Id, MarketConfig} from "../types/CommonTypes.sol";
 
 // Internal imports - contracts
-import {BondToken} from "./BondToken.sol";
+import {CentuariToken} from "./CentuariToken.sol";
 import {DataStore} from "./DataStore.sol";
 import {IDataStore} from "../interfaces/IDataStore.sol";
 
@@ -50,7 +50,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
     }
 
     modifier onlyActiveRate(Id id, uint256 rate) {
-        if (CentuariDSLib.getBondTokenAddress(IDataStore(dataStores[id]), rate) == address(0)) {
+        if (CentuariDSLib.getCentuariTokenAddress(IDataStore(dataStores[id]), rate) == address(0)) {
             revert CentuariErrorsLib.RateNotActive();
         }
         _;
@@ -173,7 +173,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         onlyActiveMarket(config.id())
     {
         IDataStore dataStore = IDataStore(dataStores[config.id()]);
-        if (CentuariDSLib.getBondTokenAddress(dataStore, rate_) != address(0)) {
+        if (CentuariDSLib.getCentuariTokenAddress(dataStore, rate_) != address(0)) {
             return; //Rate already exists, cancel add rate
         }
         if (rate_ == 0 || rate_ == 100e16) revert CentuariErrorsLib.InvalidRate();
@@ -181,7 +181,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         CentuariDSLib.setLastAccrue(dataStore, rate_, block.timestamp);
 
         //Create new Bond Token
-        BondToken.BondTokenConfig memory bondTokenConfig = BondToken.BondTokenConfig({
+        CentuariToken.CentuariTokenConfig memory centuariTokenConfig = CentuariToken.CentuariTokenConfig({
             loanToken: config.loanToken,
             collateralToken: config.collateralToken,
             rate: rate_,
@@ -189,11 +189,11 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
             maturityMonth: DateLib.getMonth(config.maturity),
             maturityYear: DateLib.getYear(config.maturity)
         });
-        BondToken bondToken = new BondToken(address(this), bondTokenConfig);
-        CentuariDSLib.setBondTokenAddress(dataStore, rate_, address(bondToken));
+        CentuariToken centuariToken = new CentuariToken(address(this), centuariTokenConfig);
+        CentuariDSLib.setCentuariTokenAddress(dataStore, rate_, address(centuariToken));
 
         emit CentuariEventsLib.RateAdded(config.id(), rate_);
-        emit CentuariEventsLib.BondTokenCreated(config.id(), address(bondToken), rate_);
+        emit CentuariEventsLib.CentuariTokenCreated(config.id(), address(centuariToken), rate_);
     }
 
     function supply(MarketConfig memory config, uint256 rate, address user, uint256 amount)
@@ -222,7 +222,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         CentuariDSLib.setTotalSupplyAssets(dataStore, rate, totalSupplyAssets + amount);
 
         // mint tokenized bond to the lender
-        BondToken(CentuariDSLib.getBondTokenAddress(dataStore, rate)).mint(user, shares);
+        CentuariToken(CentuariDSLib.getCentuariTokenAddress(dataStore, rate)).mint(user, shares);
 
         emit CentuariEventsLib.Supply(config.id(), user, rate, shares, amount);
     }
@@ -272,9 +272,9 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         uint256 totalSupplyShares = CentuariDSLib.getTotalSupplyShares(dataStore, rate);
         uint256 totalSupplyAssets = CentuariDSLib.getTotalSupplyAssets(dataStore, rate);
         address loanTokenAddress = dataStore.getAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS);
-        address bondTokenAddress = CentuariDSLib.getBondTokenAddress(dataStore, rate);
+        address centuariTokenAddress = CentuariDSLib.getCentuariTokenAddress(dataStore, rate);
 
-        if (IERC20(bondTokenAddress).balanceOf(msg.sender) < shares) revert CentuariErrorsLib.InsufficientShares();
+        if (IERC20(centuariTokenAddress).balanceOf(msg.sender) < shares) revert CentuariErrorsLib.InsufficientShares();
 
         // Calculate amount to withdraw including interest
         uint256 amount = (shares * totalSupplyAssets) / totalSupplyShares;
@@ -286,7 +286,7 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         CentuariDSLib.setTotalSupplyShares(dataStore, rate, totalSupplyShares - shares);
         CentuariDSLib.setTotalSupplyAssets(dataStore, rate, totalSupplyAssets - amount);
 
-        BondToken(bondTokenAddress).burn(msg.sender, shares);
+        CentuariToken(centuariTokenAddress).burn(msg.sender, shares);
         IERC20(loanTokenAddress).safeTransfer(msg.sender, amount);
 
         emit CentuariEventsLib.Withdraw(config.id(), msg.sender, rate, shares, amount);

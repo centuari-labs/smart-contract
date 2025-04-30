@@ -11,10 +11,14 @@ contract CentuariPrimeToken is Ownable, ERC20 {
 
     error InvalidCentuariPrimeTokenConfig();
 
-    constructor(address centuariPrime_, string memory name_)
+    uint8 private immutable _decimals;
+
+    constructor(address centuariPrime_, string memory name_, uint8 decimals_)
         Ownable(centuariPrime_)
         ERC20(string(abi.encodePacked("CPT ", name_)), string(abi.encodePacked("CPT", name_)))
-    {}
+    {
+        _decimals = decimals_;
+    }
 
     function mint(address to_, uint256 amount_) external onlyOwner {
         _mint(to_, amount_);
@@ -22,5 +26,9 @@ contract CentuariPrimeToken is Ownable, ERC20 {
 
     function burn(address from_, uint256 amount_) external onlyOwner {
         _burn(from_, amount_);
+    }
+
+    function decimals() public view override returns (uint8) {
+        return _decimals;
     }
 }

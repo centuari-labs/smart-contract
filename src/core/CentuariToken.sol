@@ -6,21 +6,21 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
-/// @title BondToken
+/// @title CentuariToken
 /// @notice A specialized ERC20 token representing lending positions in the Centuari protocol
 /// @dev Implements position tracking with dynamic naming based on debt/collateral pair
-contract BondToken is Ownable, ERC20 {
+contract CentuariToken is Ownable, ERC20 {
     using Strings for uint256;
 
     /// @notice Error thrown when invalid token information is provided
-    /// @dev Thrown when any required field in BondTokenInfo is zero or empty
+    /// @dev Thrown when any required field in CentuariTokenInfo is zero or empty
     /// @custom:error Thrown when:
     /// @custom:error - debtToken is zero address
     /// @custom:error - collateralToken is zero address
     /// @custom:error - maturity is in the past
     /// @custom:error - maturityMonth is empty string
     /// @custom:error - maturityYear is zero
-    error InvalidBondTokenInfo();
+    error InvalidCentuariTokenInfo();
 
     /// @notice Structure containing all relevant information for a Centuari bond token
     /// @dev Used to store and manage token-specific parameters
@@ -29,7 +29,7 @@ contract BondToken is Ownable, ERC20 {
     /// @param maturity Timestamp when the lending position matures
     /// @param maturityMonth String representation of maturity month (e.g., "JAN")
     /// @param maturityYear Year of maturity
-    struct BondTokenConfig {
+    struct CentuariTokenConfig {
         address loanToken;
         address collateralToken;
         uint256 rate;
@@ -40,13 +40,13 @@ contract BondToken is Ownable, ERC20 {
 
     /// @notice Information about the current Centuari token instance
     /// @dev Stores all relevant parameters for this specific token
-    BondTokenConfig public config;
+    CentuariTokenConfig public config;
 
     /// @notice Creates a new Centuari token instance
     /// @dev Initializes the token with a dynamic name and symbol based on the provided parameters
     /// @param centuari_ Address of the centuari that will own this token
     /// @param config_ Struct containing all token parameters
-    constructor(address centuari_, BondTokenConfig memory config_)
+    constructor(address centuari_, CentuariTokenConfig memory config_)
         Ownable(centuari_)
         ERC20(
             string(
@@ -82,7 +82,7 @@ contract BondToken is Ownable, ERC20 {
                 || config_.maturity <= block.timestamp || bytes(config_.maturityMonth).length == 0
                 || config_.maturityYear == 0
         ) {
-            revert InvalidBondTokenInfo();
+            revert InvalidCentuariTokenInfo();
         }
         config = config_;
     }

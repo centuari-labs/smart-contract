@@ -3,7 +3,7 @@ pragma solidity ^0.8.26;
 
 import {Test, console} from "forge-std/Test.sol";
 import {MockToken} from "../src/mocks/MockToken.sol";
-import {BondToken} from "../src/core/BondToken.sol";
+import {CentuariToken} from "../src/core/CentuariToken.sol";
 import {MockOracle} from "../src/mocks/MockOracle.sol";
 import {Centuari} from "../src/core/Centuari.sol";
 import {CentuariCLOB} from "../src/core/CentuariCLOB.sol";
@@ -22,8 +22,8 @@ contract BaseTest is Test {
     MockToken internal wbtc;
     MockToken internal weth;
 
-    /// --- BondToken ---
-    BondToken internal bondToken;
+    /// --- CentuariToken ---
+    CentuariToken internal centuariToken;
 
     /// --- Oracle ---
     MockOracle internal mockOracle;
@@ -60,8 +60,8 @@ contract BaseTest is Test {
         mockOracle = new MockOracle(address(usdc), address(weth));
         mockOracle.setPrice(2000e6);
 
-        // Deploy BondToken
-        BondToken.BondTokenConfig memory config = BondToken.BondTokenConfig({
+        // Deploy CentuariToken
+        CentuariToken.CentuariTokenConfig memory config = CentuariToken.CentuariTokenConfig({
             loanToken: address(usdc),
             collateralToken: address(weth),
             rate: RATE,
@@ -70,7 +70,7 @@ contract BaseTest is Test {
             maturityYear: MATURITY_YEAR
         });
 
-        bondToken = new BondToken(address(this), config);
+        centuariToken = new CentuariToken(address(this), config);
 
         // Deploy Centuari
         centuari = new Centuari(address(this));

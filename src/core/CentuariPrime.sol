@@ -5,6 +5,7 @@ pragma solidity ^0.8.26;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // Internal imports - contracts
@@ -80,7 +81,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
         vault.setString(CentuariPrimeDSLib.NAME_STRING, config.name);
         vault.setBool(CentuariPrimeDSLib.IS_ACTIVE_BOOL, true);
 
-        CentuariPrimeToken centuariPrimeToken = new CentuariPrimeToken(address(this), config.name);
+        CentuariPrimeToken centuariPrimeToken = new CentuariPrimeToken(address(this), config.name, IERC20Metadata(config.token).decimals());
         vault.setAddress(CentuariPrimeDSLib.CENTUARI_PRIME_TOKEN_ADDRESS, address(centuariPrimeToken));
 
         emit CentuariPrimeEventsLib.CreateVault(msg.sender, address(vault), config.token, config.name);
@@ -166,12 +167,12 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             IDataStore dataStore = IDataStore(marketDataStore);
 
             // Get bond token for this rate
-            address bondToken =
-                CentuariDSLib.getBondTokenAddress(dataStore, supplyQueue[i].rate);
+            address centuariToken =
+                CentuariDSLib.getCentuariTokenAddress(dataStore, supplyQueue[i].rate);
 
             // Get vault's bond token balance
             address curator = DataStore(vault).getAddress(CentuariPrimeDSLib.CURATOR_ADDRESS);
-            uint256 bondBalance = IERC20(bondToken).balanceOf(curator);
+            uint256 bondBalance = IERC20(centuariToken).balanceOf(curator);
             if (bondBalance == 0) continue;
 
             // Calculate value of these bonds
@@ -201,8 +202,8 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             uint256 rate = supplyQueue[i].rate;
 
             // Get vault balance of the market
-            address marketBondToken = CentuariDSLib.getBondTokenAddress(IDataStore(CENTUARI.getDataStore(marketConfig)), rate);
-            uint256 vaultBondBalance = marketBondToken == address(0) ? 0 : IERC20(marketBondToken).balanceOf(curator);
+            address marketCentuariToken = CentuariDSLib.getCentuariTokenAddress(IDataStore(CENTUARI.getDataStore(marketConfig)), rate);
+            uint256 vaultBondBalance = marketCentuariToken == address(0) ? 0 : IERC20(marketCentuariToken).balanceOf(curator);
             uint256 cap = supplyQueue[i].cap;
             if (vaultBondBalance >= cap) continue;
 
@@ -271,10 +272,10 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             MarketConfig memory marketConfig = withdrawQueue[i].marketConfig;
             uint256 rate = withdrawQueue[i].rate;
 
-            address vaultBondToken =
-                CentuariDSLib.getBondTokenAddress(IDataStore(CENTUARI.getDataStore(marketConfig)), rate);
+            address vaultCentuariToken =
+                CentuariDSLib.getCentuariTokenAddress(IDataStore(CENTUARI.getDataStore(marketConfig)), rate);
             address curator = DataStore(vault).getAddress(CentuariPrimeDSLib.CURATOR_ADDRESS);
-            uint256 vaultBondBalance = IERC20(vaultBondToken).balanceOf(curator);
+            uint256 vaultBondBalance = IERC20(vaultCentuariToken).balanceOf(curator);
             uint256 vaultAssets = CENTUARI.getUserAssetsFromShares(marketConfig, rate, vaultBondBalance);
 
             uint256 withdrawAmount = vaultBondBalance;
@@ -327,9 +328,9 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
                 // If the market is being removed, check if it still has tokens
                 if (!marketExists) {
                     DataStore centuariDataStore = DataStore(CENTUARI.getDataStore(previousMarkets[i].marketConfig));
-                    address bondToken =
-                        CentuariDSLib.getBondTokenAddress(IDataStore(centuariDataStore), previousMarkets[i].rate);
-                    if (bondToken != address(0) && IERC20(bondToken).balanceOf(address(vault)) > 0) {
+                    address centuariToken =
+                        CentuariDSLib.getCentuariTokenAddress(IDataStore(centuariDataStore), previousMarkets[i].rate);
+                    if (centuariToken != address(0) && IERC20(centuariToken).balanceOf(address(vault)) > 0) {
                         revert CentuariPrimeErrorsLib.RemoveMarketNotAllowed(
                             previousMarkets[i].marketConfig.loanToken,
                             previousMarkets[i].marketConfig.collateralToken,

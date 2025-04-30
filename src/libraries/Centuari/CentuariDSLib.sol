@@ -79,11 +79,11 @@ library CentuariDSLib {
         dataStore.setUint(keccak256(abi.encodePacked(rate, user, USER_BORROW_ASSETS_UINT256)), value);
     }
 
-    function getBondTokenAddress(IDataStore dataStore, uint256 rate) internal view returns (address) {
+    function getCentuariTokenAddress(IDataStore dataStore, uint256 rate) internal view returns (address) {
         return dataStore.getAddress(keccak256(abi.encodePacked(rate, BOND_TOKEN_ADDRESS)));
     }
 
-    function setBondTokenAddress(IDataStore dataStore, uint256 rate, address value) internal {
+    function setCentuariTokenAddress(IDataStore dataStore, uint256 rate, address value) internal {
         dataStore.setAddress(keccak256(abi.encodePacked(rate, BOND_TOKEN_ADDRESS)), value);
     }
 
