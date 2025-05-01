@@ -20,8 +20,8 @@ contract DataStoreIntegrationTest is BaseTest {
         vm.prank(address(centuariCLOB));
 
         MarketConfig memory config = MarketConfig({
-            loanToken: address(usdc),
-            collateralToken: address(weth),
+            loanToken: address(mockUsdc),
+            collateralToken: address(mockTokens[0]),
             maturity: block.timestamp + 100 days
         });
 
@@ -44,8 +44,8 @@ contract DataStoreIntegrationTest is BaseTest {
 
         //Create a DataStore
         MarketConfig memory config = MarketConfig({
-            loanToken: address(usdc),
-            collateralToken: address(weth),
+            loanToken: address(mockUsdc),
+            collateralToken: address(mockTokens[0]),
             maturity: block.timestamp + 100 days
         });
 
@@ -86,7 +86,7 @@ contract DataStoreIntegrationTest is BaseTest {
 
         // Use invalid market config with invalid loanToken
         MarketConfig memory configInvalidLoan =
-            MarketConfig({loanToken: address(0), collateralToken: address(weth), maturity: block.timestamp + 100 days});
+            MarketConfig({loanToken: address(0), collateralToken: address(mockTokens[0]), maturity: block.timestamp + 100 days});
 
         // Expect revert for invalid loanToken
         vm.expectRevert(abi.encodeWithSelector(CentuariErrorsLib.InvalidMarketConfig.selector));
@@ -94,7 +94,7 @@ contract DataStoreIntegrationTest is BaseTest {
 
         // Use invalid market config with invalid collateralToken
         MarketConfig memory configInvalidCollateral =
-            MarketConfig({loanToken: address(usdc), collateralToken: address(0), maturity: block.timestamp + 100 days});
+            MarketConfig({loanToken: address(mockUsdc), collateralToken: address(0), maturity: block.timestamp + 100 days});
 
         // Expect revert for invalid collateralToken
         vm.expectRevert(abi.encodeWithSelector(CentuariErrorsLib.InvalidMarketConfig.selector));
@@ -103,7 +103,7 @@ contract DataStoreIntegrationTest is BaseTest {
         // Use invalid market config with past maturity
         vm.warp(MOCK_TIMESTAMP);
         MarketConfig memory configInvalidMaturity =
-            MarketConfig({loanToken: address(usdc), collateralToken: address(weth), maturity: MOCK_TIMESTAMP - 1 days});
+            MarketConfig({loanToken: address(mockUsdc), collateralToken: address(mockTokens[0]), maturity: MOCK_TIMESTAMP - 1 days});
 
         // Expect revert for invalid maturity
         vm.expectRevert(abi.encodeWithSelector(CentuariErrorsLib.InvalidMarketConfig.selector));
@@ -116,8 +116,8 @@ contract DataStoreIntegrationTest is BaseTest {
 
         //Create a DataStore
         MarketConfig memory config = MarketConfig({
-            loanToken: address(usdc),
-            collateralToken: address(weth),
+            loanToken: address(mockUsdc),
+            collateralToken: address(mockTokens[0]),
             maturity: block.timestamp + 100 days
         });
 
@@ -129,7 +129,7 @@ contract DataStoreIntegrationTest is BaseTest {
 
         // Use invalid market config with invalid loanToken
         MarketConfig memory configInvalidLoan =
-            MarketConfig({loanToken: address(0), collateralToken: address(weth), maturity: block.timestamp + 100 days});
+            MarketConfig({loanToken: address(0), collateralToken: address(mockTokens[0]), maturity: block.timestamp + 100 days});
 
         // Expect revert for invalid loanToken
         vm.expectRevert(abi.encodeWithSelector(CentuariErrorsLib.InvalidMarketConfig.selector));
@@ -137,7 +137,7 @@ contract DataStoreIntegrationTest is BaseTest {
 
         // Use invalid market config with invalid collateralToken
         MarketConfig memory configInvalidCollateral =
-            MarketConfig({loanToken: address(usdc), collateralToken: address(0), maturity: block.timestamp + 100 days});
+            MarketConfig({loanToken: address(mockUsdc), collateralToken: address(0), maturity: block.timestamp + 100 days});
 
         // Expect revert for invalid collateralToken
         vm.expectRevert(abi.encodeWithSelector(CentuariErrorsLib.InvalidMarketConfig.selector));
@@ -147,7 +147,7 @@ contract DataStoreIntegrationTest is BaseTest {
         uint256 mockTimestamp = 1000000;
         vm.warp(1000000);
         MarketConfig memory configInvalidMaturity =
-            MarketConfig({loanToken: address(usdc), collateralToken: address(weth), maturity: mockTimestamp - 1 days});
+            MarketConfig({loanToken: address(mockUsdc), collateralToken: address(mockTokens[0]), maturity: mockTimestamp - 1 days});
 
         // Expect revert for invalid maturity
         vm.expectRevert(abi.encodeWithSelector(CentuariErrorsLib.InvalidMarketConfig.selector));
@@ -159,8 +159,8 @@ contract DataStoreIntegrationTest is BaseTest {
     function test_CreateDataStore_RevertIf_OnlyCentuariCLOB() public {
         //Create a DataStore
         MarketConfig memory config = MarketConfig({
-            loanToken: address(usdc),
-            collateralToken: address(weth),
+            loanToken: address(mockUsdc),
+            collateralToken: address(mockTokens[0]),
             maturity: block.timestamp + 100 days
         });
 
@@ -174,8 +174,8 @@ contract DataStoreIntegrationTest is BaseTest {
 
         //Create a DataStore
         MarketConfig memory config = MarketConfig({
-            loanToken: address(usdc),
-            collateralToken: address(weth),
+            loanToken: address(mockUsdc),
+            collateralToken: address(mockTokens[0]),
             maturity: block.timestamp + 100 days
         });
         ICentuari(centuari).createDataStore(config);

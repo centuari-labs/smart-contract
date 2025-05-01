@@ -17,11 +17,6 @@ contract BaseTest is Test {
     address internal address1;
     address internal owner;
 
-    /// --- Tokens ---
-    MockToken internal usdc;
-    MockToken internal wbtc;
-    MockToken internal weth;
-
     /// --- CentuariToken ---
     CentuariToken internal centuariToken;
 
@@ -30,7 +25,6 @@ contract BaseTest is Test {
 
     /// --- Centuari ---
     Centuari internal centuari;
-    MarketConfig internal usdcWethMarketConfig;
 
     /// --- CentuariCLOB ---
     CentuariCLOB internal centuariCLOB;
@@ -45,7 +39,8 @@ contract BaseTest is Test {
     uint256 internal constant MATURITY_YEAR = 2025;
     uint8 internal constant DECIMALS = 6;
     uint256 internal constant MOCK_TIMESTAMP = 1000000;
-    uint256 internal constant LLTV = 80e16; // 80% Loan-to-Value ratio
+    uint256 internal constant LLTV = 80e16;
+
     uint256[5] internal maturities;
     MockToken[5] internal mockTokens;
     MockToken internal mockUsdc;

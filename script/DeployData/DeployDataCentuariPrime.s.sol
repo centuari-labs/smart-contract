@@ -31,7 +31,7 @@ contract DeployDataCentuariPrime is BaseDeployData {
                     marketConfig: MarketConfig({
                         loanToken: address(musdc),
                         collateralToken: address(collaterals[j]),
-                        maturity: maturities[0]
+                        maturity: maturities[j]
                     }),
                     rate: rate_,
                     cap: 1000000e6
@@ -41,7 +41,7 @@ contract DeployDataCentuariPrime is BaseDeployData {
                     marketConfig: MarketConfig({
                         loanToken: address(musdc),
                         collateralToken: address(collaterals[j]),
-                        maturity: maturities[0]
+                        maturity: maturities[j]
                     }),
                     rate: rate_
                 });

@@ -23,9 +23,11 @@ contract DeployDataMarket is BaseDeployData {
                     collateralToken: address(collaterals[i]),
                     maturity: maturities[j]
                 });
-                centuariCLOB.createDataStore(marketConfig);
-                centuari.setLltv(marketConfig, 90e16);
-                centuari.setOracle(marketConfig, address(oracles[i]));
+                if (centuariCLOB.dataStores(marketConfig.id()) == address(0)) {
+                    centuariCLOB.createDataStore(marketConfig);
+                    centuari.setLltv(marketConfig, 90e16);
+                    centuari.setOracle(marketConfig, address(oracles[i]));
+                }
             }
         }
         console2.log(unicode"\n✅ Mock Market Data Generation Complete!");
