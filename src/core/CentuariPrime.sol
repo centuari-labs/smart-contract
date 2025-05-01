@@ -172,7 +172,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
 
             // Get vault's bond token balance
             address curator = DataStore(vault).getAddress(CentuariPrimeDSLib.CURATOR_ADDRESS);
-            uint256 bondBalance = IERC20(centuariToken).balanceOf(curator);
+            uint256 bondBalance = centuariToken != address(0) ? IERC20(centuariToken).balanceOf(curator) : 0;
             if (bondBalance == 0) continue;
 
             // Calculate value of these bonds
@@ -202,8 +202,9 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             uint256 rate = supplyQueue[i].rate;
 
             // Get vault balance of the market
-            address marketCentuariToken = CentuariDSLib.getCentuariTokenAddress(IDataStore(CENTUARI.getDataStore(marketConfig)), rate);
-            uint256 vaultBondBalance = marketCentuariToken == address(0) ? 0 : IERC20(marketCentuariToken).balanceOf(curator);
+            address dataStore = CENTUARI.getDataStore(marketConfig);
+            address marketCentuariToken = CentuariDSLib.getCentuariTokenAddress(IDataStore(dataStore), rate);
+            uint256 vaultBondBalance = marketCentuariToken != address(0) ? IERC20(marketCentuariToken).balanceOf(curator) : 0;
             uint256 cap = supplyQueue[i].cap;
             if (vaultBondBalance >= cap) continue;
 
@@ -212,6 +213,8 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             if (remainingCap < amount) {
                 supplyAmount = remainingCap;
                 amount -= remainingCap;
+            }else{
+                amount = 0;
             }
 
             // Place order to CLOB
@@ -238,7 +241,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
 
         // Get user's share balance
         address centuariPrimeToken = vault.getAddress(CentuariPrimeDSLib.CENTUARI_PRIME_TOKEN_ADDRESS);
-        uint256 userShares = IERC20(centuariPrimeToken).balanceOf(msg.sender);
+        uint256 userShares = centuariPrimeToken != address(0) ? IERC20(centuariPrimeToken).balanceOf(msg.sender) : 0;
         if (userShares < shares) revert CentuariPrimeErrorsLib.InsufficientShares();
 
         // Accrue interest before calculating withdrawal amount
@@ -275,7 +278,7 @@ contract CentuariPrime is Ownable, ReentrancyGuard {
             address vaultCentuariToken =
                 CentuariDSLib.getCentuariTokenAddress(IDataStore(CENTUARI.getDataStore(marketConfig)), rate);
             address curator = DataStore(vault).getAddress(CentuariPrimeDSLib.CURATOR_ADDRESS);
-            uint256 vaultBondBalance = IERC20(vaultCentuariToken).balanceOf(curator);
+            uint256 vaultBondBalance = vaultCentuariToken != address(0) ? IERC20(vaultCentuariToken).balanceOf(curator) : 0;
             uint256 vaultAssets = CENTUARI.getUserAssetsFromShares(marketConfig, rate, vaultBondBalance);
 
             uint256 withdrawAmount = vaultBondBalance;

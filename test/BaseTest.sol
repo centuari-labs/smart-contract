@@ -46,24 +46,44 @@ contract BaseTest is Test {
     uint8 internal constant DECIMALS = 6;
     uint256 internal constant MOCK_TIMESTAMP = 1000000;
     uint256 internal constant LLTV = 80e16; // 80% Loan-to-Value ratio
+    uint256[5] internal maturities;
+    MockToken[5] internal mockTokens;
+    MockToken internal mockUsdc;
 
     function setUp() public virtual {
         address1 = makeAddr("address1");
         owner = address(this);
 
+        mockUsdc = new MockToken("Mock USDC", "MUSDC", 6); //USDC
         // Deploy mock tokens
-        usdc = new MockToken("Mock USDC", "MUSDC", DECIMALS);
-        wbtc = new MockToken("Mock WBTC", "MWBTC", 8);
-        weth = new MockToken("Mock ETH", "METH", 18);
+        mockTokens = [
+            new MockToken("Mock WETH", "METH", 18), // WETH
+            new MockToken("Mock WBTC", "MBTC", 8), // WBTC
+            new MockToken("Mock WSOL", "MSOL", 18), // SOL
+            new MockToken("Mock WLINK", "MLINK", 18), // LINK
+            new MockToken("Mock WAAVE", "MAAVE", 18) // AAVE
+        ];
 
-        // Deploy mock oracle
-        mockOracle = new MockOracle(address(usdc), address(weth));
-        mockOracle.setPrice(2000e6);
+        // Deploy mock oracles
+        uint40[5] memory prices = [2500e6, 90000e6, 200e6, 15e6, 200e6];
+        MockOracle[5] memory oracles;
+        for (uint256 i = 0; i < 5; i++) {
+            oracles[i] = new MockOracle(address(mockTokens[i]), address(mockUsdc));
+            oracles[i].setPrice(prices[i]);
+        }
+
+        maturities = [
+            uint256(1751302800), // 2025-07-01 00:00:00
+            uint256(1753981200), // 2025-08-01 00:00:00
+            uint256(1756659600), // 2025-09-01 00:00:00
+            uint256(1759251600), // 2025-10-01 00:00:00
+            uint256(1761930000)  // 2025-11-01 00:00:00
+        ];  
 
         // Deploy CentuariToken
         CentuariToken.CentuariTokenConfig memory config = CentuariToken.CentuariTokenConfig({
-            loanToken: address(usdc),
-            collateralToken: address(weth),
+            loanToken: address(mockUsdc),
+            collateralToken: address(mockTokens[0]),
             rate: RATE,
             maturity: MATURITY,
             maturityMonth: MATURITY_MONTH,
@@ -80,24 +100,23 @@ contract BaseTest is Test {
         
         // Set CentuariCLOB address for Centuari
         centuari.setCentuariCLOB(address(centuariCLOB));
-        
-        // Setup market config
-        usdcWethMarketConfig = MarketConfig({
-            loanToken: address(usdc), 
-            collateralToken: address(weth), 
-            maturity: MATURITY
-        });
-        
-        // Create DataStore for the market
-        centuariCLOB.createDataStore(usdcWethMarketConfig);
-        
-        // Set Oracle for the market
-        centuari.setOracle(usdcWethMarketConfig, address(mockOracle));
-        
-        // Set LLTV (Loan-to-Value ratio) for the market
-        centuari.setLltv(usdcWethMarketConfig, LLTV);
 
         // Deploy CentuariPrime
         centuariPrime = new CentuariPrime(address(this), address(centuariCLOB), address(centuari));
+        centuariCLOB.setCentuariPrime(address(centuariPrime));
+        
+        // Setup market
+        for (uint256 i = 0; i < mockTokens.length; i++) {
+            for (uint256 j = 0; j < maturities.length; j++) {
+                MarketConfig memory marketConfig = MarketConfig({
+                    loanToken: address(mockUsdc),
+                    collateralToken: address(mockTokens[i]),
+                    maturity: maturities[j]
+                });
+                centuariCLOB.createDataStore(marketConfig);
+                centuari.setLltv(marketConfig, 90e16);
+                centuari.setOracle(marketConfig, address(oracles[i]));
+            }
+        }
     }
 }
