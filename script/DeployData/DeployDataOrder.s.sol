@@ -59,8 +59,8 @@ contract DeployDataOrder is BaseDeployData {
         // Random seed based on timestamp and indices
         seed = uint256(keccak256(abi.encodePacked(block.timestamp, collateralIndex, maturityIndex)));
         
-        // Randomize RATE_INCREMENT between 0.1% ~ 0.5% (0.1e16 ~ 0.5e16)
-        rateIncrement = 0.1e16 + (seed % 5) * 0.1e16;
+        // Randomize RATE_INCREMENT between 0.01% ~ 0.05% (0.01e16 ~ 0.05e16)
+        rateIncrement = 0.01e16 + (seed % 5) * 0.01e16;
         
         // Randomize USDC_AMOUNT between 1000 USDC and 40% of collateral value
         uint256 minAmount = 1000e6; // 1,000 USDC
@@ -101,6 +101,9 @@ contract DeployDataOrder is BaseDeployData {
             marketConfig.collateralToken, 
             marketConfig.maturity
         );
+        console2.log("loan token: %s", marketConfig.loanToken);
+        console2.log("amount: %s", baseAmount);
+        console2.log("owned amount: %s", MockToken(marketConfig.loanToken).balanceOf(vm.addr(lenderKey)));
         vm.startBroadcast(lenderKey);
         
         for (uint256 k = 0; k < lendRates.length; k++) {
@@ -118,7 +121,7 @@ contract DeployDataOrder is BaseDeployData {
             
             console2.log(
                 "  Rate: %s%%, Amount: %s USDC",
-                lendRates[k] / 1e14 / 100,
+                lendRates[k] / 1e14,
                 orderAmount / 1e6
             );
         }
@@ -139,6 +142,9 @@ contract DeployDataOrder is BaseDeployData {
             marketConfig.collateralToken, 
             marketConfig.maturity
         );
+        console2.log("collateral token: %s", marketConfig.collateralToken);
+        console2.log("collateral amount: %s", collateralAmount);
+        console2.log("owned collateral amount: %s", MockToken(marketConfig.collateralToken).balanceOf(vm.addr(borrowerKey)));
         vm.startBroadcast(borrowerKey);
         
         for (uint256 k = 0; k < borrowRates.length; k++) {
@@ -156,7 +162,7 @@ contract DeployDataOrder is BaseDeployData {
             
             console2.log(
                 "  Rate: %s%%, Amount: %s USDC",
-                borrowRates[k] / 1e14 / 100,
+                borrowRates[k] / 1e14,
                 orderAmount / 1e6
             );
         }
