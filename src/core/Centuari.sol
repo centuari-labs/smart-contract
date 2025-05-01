@@ -75,7 +75,12 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
 
         Id marketConfigId = config.id();
         DataStore dataStore = new DataStore(owner(), address(this));
-        dataStores[marketConfigId] = address(dataStore);
+
+        if (dataStores[marketConfigId] != address(0)) {
+            revert CentuariErrorsLib.DataStoreAlreadyExists();
+        } else {
+            dataStores[marketConfigId] = address(dataStore);
+        }
 
         // Set data store data
         dataStore.setAddress(CentuariDSLib.LOAN_TOKEN_ADDRESS, config.loanToken);
@@ -93,6 +98,10 @@ contract Centuari is ICentuari, Ownable, ReentrancyGuard {
         if (
             config.loanToken == address(0) || config.collateralToken == address(0)
         ) revert CentuariErrorsLib.InvalidMarketConfig();
+
+        if (dataStores[config.id()] == address(0)) {
+            revert CentuariErrorsLib.DataStoreDoesNotExist();
+        }
 
         dataStores[config.id()] = dataStore;
 

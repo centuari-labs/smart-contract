@@ -3,6 +3,8 @@ pragma solidity ^0.8.26;
 
 library CentuariErrorsLib {
     error InvalidMarketConfig();
+    error DataStoreAlreadyExists();
+    error DataStoreDoesNotExist();
     error InvalidUser();
     error InvalidAmount();
     error MarketExpired();
