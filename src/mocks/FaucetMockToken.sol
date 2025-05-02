@@ -21,12 +21,12 @@ contract FaucetMockToken {
     MockToken[6] private tokens;
 
     uint256[6] private amounts = [
-        uint256(1_000_000), // USDC
-        uint256(1_000_000), // WETH
-        uint256(10_000), // WBTC
-        uint256(1_000_000), // SOL
-        uint256(1_000_000), // LINK
-        uint256(1_000_000) // AAVE
+        uint256(100), // USDC
+        uint256(100), // WETH
+        uint256(100), // WBTC
+        uint256(100), // SOL
+        uint256(100), // LINK
+        uint256(100) // AAVE
     ];
 
     event TokensRequested(address indexed recipient);
