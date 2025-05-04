@@ -55,10 +55,9 @@ A system that allows experienced users (curators) to create and manage investmen
 | Module                         | Description                                                            |
 |:-------------------------------|:-----------------------------------------------------------------------|
 | **CLOB Engine**                | Decentralized matching of loan offers and bids                         |
-| **LendingVault.sol**           | Manages vault deposits, withdrawals, and yield distribution            |
-| **CentuariServiceManager.sol** | Task manager for operator actions and lending task validations         |
+| **Centuari**                   | vault after order match                                                |
 | **Bond Tokens**                | ERC20 tokens representing a lender’s claim to repayment and interest   |
-| **Curator System**             | Vault creation, management, and performance fee handling               |
+| **Curator System**             | without needing to manage everything yourself                          |
 
 ---
 
