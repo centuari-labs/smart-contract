@@ -1,129 +1,70 @@
+<div style="max-width: 800px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #2c3e50;">
+
+<h1 style="text-align: center; color: #1a237e; font-size: 2.5em; margin-bottom: 20px; background: linear-gradient(45deg, #1a237e, #4a148c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
 📖 Centuari Protocol
-Welcome to Centuari, an innovative decentralized lending protocol powered by a Central Limit Order Book (CLOB) system. Centuari enables both retail and institutional users to access fixed-rate loans, either with or without collateral, secured by a restaking-based underwriting system.
-📌 Overview
-Centuari offers a flexible and modular lending infrastructure where users can interact via:
+</h1>
 
-📝 CLOB-based lending market
-💸 Tokenized bond system
-🛡️ Restaking underwriting for institutions
-📊 Yield-optimizing vaults managed by curators
+<div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+<p style="font-size: 1.1em; margin: 0;">Welcome to Centuari, an innovative decentralized lending protocol powered by a deCentralized Lending Order Book (CLOB) system. Centuari enables both retail and institutional users to access fixed-rate loans, either with or without collateral, secured by a restaking-based underwriting system.</p>
+</div>
 
-📂 Project Structure
-This repository contains three main modules:
-1️⃣ Centuari CLOB
-A decentralized lending marketplace using a Central Limit Order Book model where borrowers post loan requests, and lenders match offers through limit orders.
-✨ Key Features:
+<h2 style="color: #1a237e; border-left: 4px solid #1a237e; padding-left: 10px; margin-top: 30px;">📌 Overview</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0;">
+<div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+<strong>📝 CLOB-based lending market</strong><br>
+<strong>💸 Tokenized bond system</strong><br>
+<strong>🛡️ Restaking underwriting</strong><br>
+<strong>📊 Yield-optimizing vaults</strong>
+</div>
+</div>
 
-Fully on-chain order book system
-Flat interest rate model
-Tokenized bond system for lenders (ERC20)
+<h2 style="color: #1a237e; border-left: 4px solid #1a237e; padding-left: 10px;">📂 Project Structure</h2>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 20px 0;">
 
-📌 Example: Matching Orders
+<div style="background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px;">
+<h3 style="margin-top: 0; color: #1a237e;">1️⃣ Centuari CLOB</h3>
+<p>Decentralized lending marketplace using Central Limit Order Book model</p>
+<div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin: 10px 0;">
+<pre style="margin: 0; font-size: 0.9em;">
 function matchOrders(Id marketId, uint256 maxMatchCount) external onlyOwner {
-    MarketConfig storage market = CentuariCLOBDSLib.getMarket(marketId);
-    OrderQueueLib.matchOrders(
-        market.orderQueue,
-        market.priceTickSize,
-        maxMatchCount
-    );
-}
+  MarketConfig storage market = CentuariCLOBDSLib.getMarket(marketId);
+  OrderQueueLib.matchOrders(
+    market.orderQueue,
+    market.priceTickSize,
+    maxMatchCount
+  );
+}</pre>
+</div>
+</div>
 
-2️⃣ Centuari Vault
-A permissionless lending pool where anyone can deposit assets. The funds will automatically fulfill lending orders in the CLOB market.
-🚀 Highlights:
+</div>
 
-Vault Token (VT) minted for each depositor
-Interest accrual from lending activities
-Custom supply and withdrawal queues per vault
+<h2 style="color: #1a237e; border-left: 4px solid #1a237e; padding-left: 10px;">⚙️ Key Components</h2>
+<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+<tr style="background: #1a237e; color: white;">
+<th style="padding: 12px; text-align: left;">📦 Module</th>
+<th style="padding: 12px; text-align: left;">📖 Description</th>
+</tr>
+<tr style="border-bottom: 1px solid #e0e0e0;">
+<td style="padding: 12px;">CLOB Engine</td>
+<td>On-chain decentralized matching engine</td>
+</tr>
+</table>
 
-📌 Example: Deposit to Vault
-function deposit() external payable {
-    require(msg.value > 0, "Zero deposit");
-    uint256 shares = calculateShares(msg.value);
-    _mint(msg.sender, shares);
-}
+<h2 style="color: #1a237e; border-left: 4px solid #1a237e; padding-left: 10px;">🛠 Tech Stack</h2>
+<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+<span style="background: #4a148c; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.9em;">Solidity</span>
+<span style="background: #4a148c; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.9em;">Foundry</span>
+</div>
 
-3️⃣ Centuari Prime (Curator System)
-A system for experienced users (curators) to build and manage custom vaults containing curated lending strategies.
-💎 Features:
+<h2 style="color: #1a237e; border-left: 4px solid #1a237e; padding-left: 10px;">🤝 Contribute & Connect</h2>
+<div style="display: flex; gap: 15px; margin: 20px 0;">
+<a href="https://x.com/CentuariLabs" style="background: #1da1f2; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">🐦 Twitter</a>
+<a href="https://discord.gg/XU2hUG4Uuz" style="background: #5865f2; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">💬 Discord</a>
+</div>
 
-Create personal vaults
-Automated fund allocation to CLOB markets
-Earn curator performance fees
-Flexible withdrawal and deposit mechanisms
+<div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px; text-align: center;">
+📜 License: Licensed under the MIT License
+</div>
 
-📌 Example: Creating a Curated Vault
-function createVault(string memory name) external {
-    Vault newVault = new Vault(name, msg.sender);
-    curatorVaults[msg.sender].push(address(newVault));
-}
-
-⚙️ Key Components
-
-
-
-📦 Module
-📖 Description
-
-
-
-CLOB Engine
-On-chain decentralized matching engine for loan offers and bids
-
-
-Centuari Vault
-Permissionless lending vaults auto-matching orders
-
-
-Bond Tokens
-ERC20 tokens representing a lender’s claim to repayment and interest
-
-
-Curator System
-Decentralized strategy management layer via curated vaults
-
-
-📈 How It Works
-🔹 Retail Borrowers:
-
-Deposit collateral
-Request loan at fixed interest rate via CLOB
-
-🔹 Institutional Borrowers:
-
-Underwrite loans using restaking assets as virtual collateral
-Borrow fixed-rate loans without locking base assets
-
-🔹 Lenders:
-
-Place lending offers via CLOB or deposit into Vaults
-Receive Bond Tokens for each lending position
-Earn fixed interest and optional performance fees
-
-📌 Example: Placing Lending Offer
-function placeOrder(
-    uint256 marketId, 
-    uint256 amount, 
-    uint256 interestRate, 
-    uint256 maturity
-) external {
-    require(amount > 0, "Zero amount");
-    orderBook[marketId].push(Order(msg.sender, amount, interestRate, maturity));
-}
-
-🛠 Tech Stack
-
-Solidity: Smart Contracts
-Foundry: Smart Contract Framework
-TypeScript: Off-chain scripts & task schedulers
-Chainlink Oracles: Price feeds and off-chain data
-ERC20 Standard: Tokens
-
-🌐 Vision
-Centuari envisions the next-gen decentralized capital markets, where both retail and institutional players can access transparent, fixed-rate, programmable debt markets powered by on-chain infrastructure and restaking underwriting.
-🤝 Contribute & Connect
-We’re open for collaborations, feedback, and ideas.
-
-🐦 Twitter: [@centuarilabs](https://x.com/CentuariLabs)
-💬 Discord: [@centuari](https://discord.gg/XU2hUG4Uuz)
-📜 License: Licensed under the MIT License.
+</div>
