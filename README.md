@@ -10,7 +10,6 @@ Centuari introduces a robust decentralized lending marketplace with the followin
 
 - 📝 **CLOB-based lending market**: A Central Limit Order Book model for efficient loan matching.
 - 💸 **Tokenized bond system**: Tokenized representations of fixed-rate loans.
-- 🛡️ **Restaking underwriting**: A secure mechanism for collateral-backed loans.
 - 📊 **Yield-optimizing vaults**: Maximizing returns for liquidity providers.
 
 ---
@@ -41,11 +40,10 @@ The repository is organized as follows:
 
 ## ⚙️ Key Components
 
-| 📦 Module         | 📖 Description                              |
+| 📦 Module         | 📖 Description                             |
 |--------------------|--------------------------------------------|
 | **CLOB Engine**    | On-chain decentralized matching engine.    |
 | **Tokenized Bonds**| Tokenized fixed-rate loan representations. |
-| **Restaking**      | Collateral-backed underwriting mechanism.  |
 
 ---
 
