@@ -7,7 +7,7 @@ type Id is bytes32;
 struct MarketConfig {
     address loanToken;
     address collateralToken;
-    uint256 maturity;
+    address oracle;
 }
 
 struct VaultMarketSupplyConfig {
@@ -30,11 +30,9 @@ struct VaultConfig {
 struct Order {
     uint256 id;
     address trader;
-    uint256 amount;
-    uint256 collateralAmount;
     uint256 rate;
     Side side;
-    Status status;
+    uint256 groupId;
 }
 
 struct MatchedOrder {
@@ -49,7 +47,7 @@ enum Side {
     BORROW
 }
 
-enum Status {
+enum OrderStatus {
     OPEN, // Order is active and available for matching
     PARTIALLY_FILLED, // Order is partially matched but still active
     FILLED, // Order is completely matched

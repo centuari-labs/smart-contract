@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {Id, Side, Status} from "../../types/CommonTypes.sol";
+import {Id, Side, OrderStatus} from "../../types/CommonTypes.sol";
 
 library CentuariCLOBEventsLib {
     event OrderPlaced(
@@ -12,7 +12,7 @@ library CentuariCLOBEventsLib {
         uint256 collateralAmount,
         uint256 rate,
         Side side,
-        Status status
+        OrderStatus status
     );
     event OrderMatched(Id indexed marketId, uint256 newOrderId, uint256 oppositeOrderId, uint256 matchedAmount);
     event OrderCancelled(Id indexed marketId, uint256 orderId);
